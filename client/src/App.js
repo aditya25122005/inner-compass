@@ -1,11 +1,20 @@
 import React from 'react';
+import Navbar from './Navbar';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 import './App.css';
 import JournalPage from './pages/JournalPage';
+import Dashboard from './pages/Dashboard'
 function App() {
   return (
-    <div className="App">
-      <JournalPage/>
-    </div>
+        <BrowserRouter>
+      <Navbar />
+      <div className="container mt-5">
+        <Routes>
+          <Route path="/" element={<JournalPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 

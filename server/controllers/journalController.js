@@ -18,4 +18,16 @@ const createJournalEntry= async(req,res)=>{
     }
 }
 
-module.exports={createJournalEntry};
+
+
+const getAllJournalEntries = async (req, res) => {
+    try {
+        const entries = await JournalEntry.find();
+        res.json(entries);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+module.exports={createJournalEntry , getAllJournalEntries};

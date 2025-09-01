@@ -5,11 +5,15 @@ const JournalEntrySchema= new mongoose.Schema({
         type:String,
         required:true,
     },
+    mood: { 
+    type: String,
+    required: true,
+    },
     createdAt:{
         type:Date,
         default:Date.now,
     },
-    //mood_score
+    
     //user_id
 });
 const JournalEntry= mongoose.model('JournalEntry',JournalEntrySchema);
