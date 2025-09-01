@@ -1,11 +1,10 @@
 import React from 'react';
 import './App.css';
-
+import JournalPage from './pages/JournalPage';
 function App() {
   return (
     <div className="App">
-      <h1>Inner Compass</h1>
-      <p>This is the start of your mental wellness platform!</p>
+      <JournalPage/>
     </div>
   );
 }
