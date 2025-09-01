@@ -1,0 +1,10 @@
+# Ignore Node.js dependencies (for the backend)
+node_modules/
+
+# Ignore environment variables and secrets (for the backend)
+.env
+.env.local
+
+# Ignore any local build outputs or logs
+/dist
+npm-debug.log*
