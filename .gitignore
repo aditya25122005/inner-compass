@@ -1,0 +1,14 @@
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore production builds
+build/
+
+# Ignore environment variables and secrets
+.env
+.env.production
+.env.development
+
+# Operating System files
+.DS_Store
+Thumbs.db
