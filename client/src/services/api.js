@@ -74,7 +74,7 @@ export const authAPI = {
 
 export default api;
 
-const API_BASE_URL = '/api';
+// const API_BASE_URL = '/api';
 
 export const journalAPI = {
   // Get all journal entries
