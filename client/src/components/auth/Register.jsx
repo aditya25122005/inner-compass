@@ -18,39 +18,47 @@ const Register = ({ onSwitchToLogin }) => {
   const { register } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [name]: name === 'age' ? Number(value) : value
+    }));
     if (error) setError('');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log('handleSubmit is called!');
+  setIsSubmitting(true);
+  setError('');
 
-    // Basic validation
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.age && (formData.age < 13 || formData.age > 120)) {
-      setError('Age must be between 13 and 120');
-      setIsSubmitting(false);
-      return;
-    }
-
-    const result = await register(formData);
-    
-    if (!result.success) {
-      setError(result.message);
-    }
-    
+  // Basic validation
+  if (formData.password.length < 6) {
+    setError('Password must be at least 6 characters long');
     setIsSubmitting(false);
-  };
+    return;
+  }
+
+  if (formData.age && (formData.age < 13 || formData.age > 120)) {
+    setError('Age must be between 13 and 120');
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    const result = await register(formData);
+
+    if (!result.success) {
+      console.error('Registration failed backend response:', result); // <-- log full result
+      setError(result.message || 'Something went wrong. Please try again.');
+    }
+  } catch (err) {
+    console.error('Registration unexpected error:', err); // catches unexpected errors
+    setError('Registration failed. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="auth-container">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { LucideUserCircle2, LucideSettings, LucideLogOut } from 'lucide-react';
-import MentalStatusCard from '../dashboard/status';
+import MentalStatusCard from '../dashboard/status.jsx';
 import ProgressCard from '../dashboard/progress';
 import ProfileCard from '../dashboard/profile';
 import ActivityCard from '../dashboard/activity';

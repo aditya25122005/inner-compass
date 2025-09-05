@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -10,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -19,7 +17,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -32,7 +29,6 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API
 export const authAPI = {
   register: async (userData) => {
     const response = await api.post('/auth/register', userData);
@@ -72,74 +68,15 @@ export const authAPI = {
   }
 };
 
-export default api;
-
-const API_BASE_URL = '/api';
-
 export const journalAPI = {
-  // Get all journal entries
   getAllEntries: async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/journal`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch journal entries');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching journal entries:', error);
-      // Return demo data if API fails
-      return [
-        {
-          _id: '1',
-          content: 'Today I felt really good about my progress in meditation.',
-          mood: 'happy',
-          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        },
-        {
-          _id: '2',
-          content: 'Had some challenges with anxiety, but I managed to work through them.',
-          mood: 'anxious',
-          createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        },
-        {
-          _id: '3',
-          content: 'Feeling balanced and centered after my morning routine.',
-          mood: 'calm',
-          createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-        }
-      ];
-    }
+    const response = await api.get('/journal');
+    return response.data;
   },
 
-  // Create a new journal entry
   createEntry: async (content, mood) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/journal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content, mood }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create journal entry');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating journal entry:', error);
-      // Return demo response if API fails
-      return {
-        msg: 'Journal entry saved successfully (demo mode)',
-        data: {
-          _id: Date.now().toString(),
-          content,
-          mood,
-          createdAt: new Date().toISOString(),
-        }
-      };
-    }
+    const response = await api.post('/journal', { content, mood });
+    return response.data;
   }
 };
 
@@ -172,3 +109,5 @@ export const demoData = {
     ]
   }
 };
+
+export default api;

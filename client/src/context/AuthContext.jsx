@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/authAPI';
-import { demoAuthAPI } from '../services/demoAuth';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -22,28 +21,23 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
       const savedUser = localStorage.getItem('user');
-      
+
       if (token && savedUser) {
         try {
           // Verify token is still valid by fetching user profile
           const response = await authAPI.getProfile();
-          setUser(response.user);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.warn('Backend profile verification failed, checking demo auth:', error);
-          
-          // Check if it's a demo token
-          const demoUser = demoAuthAPI.verifyToken(token);
-          if (demoUser) {
-            setUser(demoUser);
+          // ✅ FIX: Check if response data and user exist before setting state
+          if (response.data && response.data.user) {
+            setUser(response.data.user);
             setIsAuthenticated(true);
-          } else {
-            // Token is invalid, remove from storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUser(null);
-            setIsAuthenticated(false);
           }
+        } catch (error) {
+          console.warn('Backend profile verification failed:', error);
+          // Token is invalid, remove from storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setIsAuthenticated(false);
         }
       }
       setIsLoading(false);
@@ -51,95 +45,59 @@ export const AuthProvider = ({ children }) => {
 
     initializeAuth();
   }, []);
+// LOGIN
+const login = async (credentials) => {
+  setIsLoading(true);
+  try {
+    const data = await authAPI.login(credentials);
+    console.log('Raw login response:', data);
 
-  const login = async (credentials) => {
-    try {
-      setIsLoading(true);
-      
-      // Try real backend authentication first
-      try {
-        const response = await authAPI.login(credentials);
-        
-        if (response.success) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
-          setUser(response.user);
-          setIsAuthenticated(true);
-          return { success: true };
-        } else {
-          return { success: false, message: response.message };
-        }
-      } catch (backendError) {
-        console.warn('Backend authentication failed, trying demo auth:', backendError);
-        
-        // Fallback to demo authentication
-        const demoResponse = await demoAuthAPI.login(credentials);
-        
-        if (demoResponse.success) {
-          localStorage.setItem('token', demoResponse.token);
-          localStorage.setItem('user', JSON.stringify(demoResponse.user));
-          setUser(demoResponse.user);
-          setIsAuthenticated(true);
-          return { success: true };
-        } else {
-          return { success: false, message: demoResponse.message };
-        }
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { 
-        success: false, 
-        message: 'Login failed. Please try again.' 
-      };
-    } finally {
-      setIsLoading(false);
+    if (data?.token && data?.user) {  // check if backend returned token & user
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      setIsAuthenticated(true);
+
+      return { success: true, message: 'Login successful!', user: data.user };
+    } else {
+      return { success: false, message: data?.msg || 'Login failed.' };
     }
-  };
+  } catch (error) {
+    console.error('Login failed:', error);
+    const errorMessage = error?.response?.data?.msg || error.message || 'Login failed. Please try again.';
+    return { success: false, message: errorMessage };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  const register = async (userData) => {
-    try {
-      setIsLoading(true);
-      
-      // Try real backend registration first
-      try {
-        const response = await authAPI.register(userData);
-        
-        if (response.success) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
-          setUser(response.user);
-          setIsAuthenticated(true);
-          return { success: true };
-        } else {
-          return { success: false, message: response.message };
-        }
-      } catch (backendError) {
-        console.warn('Backend registration failed, trying demo auth:', backendError);
-        
-        // Fallback to demo registration
-        const demoResponse = await demoAuthAPI.register(userData);
-        
-        if (demoResponse.success) {
-          localStorage.setItem('token', demoResponse.token);
-          localStorage.setItem('user', JSON.stringify(demoResponse.user));
-          setUser(demoResponse.user);
-          setIsAuthenticated(true);
-          return { success: true };
-        } else {
-          return { success: false, message: demoResponse.message };
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { 
-        success: false, 
-        message: 'Registration failed. Please try again.' 
-      };
-    } finally {
-      setIsLoading(false);
+
+
+// REGISTER
+const register = async (userData) => {
+  setIsLoading(true);
+  try {
+    const data = await authAPI.register(userData); // <-- already data
+    console.log('Raw register response:', data);
+
+    if (data?.success) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      setIsAuthenticated(true);
+
+      return { success: true, message: 'Registration successful!' };
+    } else {
+      return { success: false, message: data?.msg || 'Registration failed.' };
     }
-  };
-
+  } catch (error) {
+    console.error('Registration failed, please check the backend:', error);
+    const errorMessage = error?.response?.data?.msg || error.message || 'Registration failed. Please try again.';
+    return { success: false, message: errorMessage };
+  } finally {
+    setIsLoading(false);
+  }
+};
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -149,98 +107,75 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      // Try real backend first
-      try {
-        const response = await authAPI.updateProfile(profileData);
-        if (response.success) {
-          setUser(response.user);
-          localStorage.setItem('user', JSON.stringify(response.user));
-          return { success: true };
-        }
-        return { success: false, message: response.message };
-      } catch (backendError) {
-        console.warn('Backend profile update failed, trying demo auth:', backendError);
-        
-        // Fallback to demo profile update
-        const demoResponse = await demoAuthAPI.updateProfile(profileData);
-        if (demoResponse.success) {
-          setUser(demoResponse.user);
-          localStorage.setItem('user', JSON.stringify(demoResponse.user));
-          return { success: true };
-        }
-        return { success: false, message: demoResponse.message };
+      const response = await authAPI.updateProfile(profileData);
+      
+      if (response.data && response.data.user) {
+        setUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        return { success: true };
+      } else {
+        return { success: false, message: response.data.msg || 'Profile update failed.' };
       }
+      
     } catch (error) {
       console.error('Profile update error:', error);
-      return { 
-        success: false, 
-        message: 'Profile update failed.' 
+      let errorMessage = 'Profile update failed.';
+      if (error.response && error.response.data && error.response.data.msg) {
+        errorMessage = error.response.data.msg;
+      }
+      return {
+        success: false,
+        message: errorMessage
       };
     }
   };
 
   const uploadProfilePicture = async (file) => {
     try {
-      // Try real backend first
-      try {
-        const response = await authAPI.uploadProfilePicture(file);
-        if (response.success) {
-          const updatedUser = { ...user, profilePicture: `http://localhost:5000${response.profilePicture}` };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-          return { success: true, profilePicture: `http://localhost:5000${response.profilePicture}` };
-        }
-        return { success: false, message: response.message };
-      } catch (backendError) {
-        console.warn('Backend profile picture upload failed, trying demo auth:', backendError);
-        
-        // Fallback to demo profile picture upload
-        const demoResponse = await demoAuthAPI.uploadProfilePicture(file);
-        if (demoResponse.success) {
-          const updatedUser = { ...user, profilePicture: demoResponse.profilePicture };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-          return { success: true, profilePicture: demoResponse.profilePicture };
-        }
-        return { success: false, message: demoResponse.message };
+      const response = await authAPI.uploadProfilePicture(file);
+      
+      if (response.data && response.data.profilePicture) {
+        const updatedUser = { ...user, profilePicture: `http://localhost:5000${response.data.profilePicture}` };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return { success: true, profilePicture: `http://localhost:5000${response.data.profilePicture}` };
+      } else {
+        return { success: false, message: response.data.msg || 'Profile picture upload failed.' };
       }
+      
     } catch (error) {
       console.error('Profile picture upload error:', error);
-      return { 
-        success: false, 
-        message: 'Profile picture upload failed.' 
+      let errorMessage = 'Profile picture upload failed.';
+      if (error.response && error.response.data && error.response.data.msg) {
+        errorMessage = error.response.data.msg;
+      }
+      return {
+        success: false,
+        message: errorMessage
       };
     }
   };
 
   const demoLogin = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Direct demo login starting...');
-      
-      const demoResponse = await demoAuthAPI.login({ emailOrUsername: 'admin', password: '123456' });
-      console.log('Demo response:', demoResponse);
-      
-      if (demoResponse.success) {
-        localStorage.setItem('token', demoResponse.token);
-        localStorage.setItem('user', JSON.stringify(demoResponse.user));
-        setUser(demoResponse.user);
-        setIsAuthenticated(true);
-        console.log('Demo login successful!');
-        return { success: true };
-      } else {
-        console.log('Demo login failed:', demoResponse.message);
-        return { success: false, message: demoResponse.message };
-      }
-    } catch (error) {
-      console.error('Demo login error:', error);
-      return { 
-        success: false, 
-        message: 'Demo login failed. Please try again.' 
-      };
-    } finally {
-      setIsLoading(false);
-    }
+    // NOTE: This function is for demonstration purposes only.
+    // The real login flow should not use a fallback.
+    const demoResponse = {
+      success: true,
+      user: {
+        _id: 'demo-user-123',
+        name: 'Demo User',
+        username: 'demouser',
+        email: 'demo@example.com',
+        profilePicture: 'https://placehold.co/150x150/png',
+      },
+      token: 'demo-token-xyz'
+    };
+    
+    localStorage.setItem('token', demoResponse.token);
+    localStorage.setItem('user', JSON.stringify(demoResponse.user));
+    setUser(demoResponse.user);
+    setIsAuthenticated(true);
+    return { success: true };
   };
 
   const value = {

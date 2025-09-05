@@ -1,58 +1,69 @@
-import React, { useState } from 'react';
-import { LucideEye, LucideEyeOff, LucideLogIn, LucideUserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LucideEye, LucideEyeOff, LucideLogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Login = ({ onSwitchToRegister }) => {
-  const [formData, setFormData] = useState({
-    emailOrUsername: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ emailOrUsername: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { login, demoLogin } = useAuth();
+
+  const { login, demoLogin, isAuthenticated } = useAuth();
+
+  // ✅ Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = '/dashboard/'; // change path if different
+    }
+  }, [isAuthenticated]);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError('');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setError('');
 
-    const result = await login(formData);
-    
+  try {
+    const result = await login(formData); // login from AuthContext
+
+    console.log('Login response:', result);
+
     if (!result.success) {
-      setError(result.message);
+      console.error('Login failed backend response:', result);
+      setError(result.message || 'Something went wrong. Please try again.');
+    } else {
+      // Login success: user info is already stored in context
+      // Optionally you can update dashboard state here if needed
+      console.log('Logged in user:', result.user);
     }
-    
+  } catch (err) {
+    console.error('Login unexpected error:', err);
+    setError('Login failed. Please try again.');
+  } finally {
     setIsSubmitting(false);
-  };
+  }
+};
+
+
+
 
   const handleDemoLogin = async () => {
     setIsSubmitting(true);
     setError('');
-    
+
     try {
-      console.log('Starting demo login...');
       const result = await demoLogin();
-      console.log('Demo login result:', result);
-      
-      if (!result.success) {
-        setError(result.message);
-      }
+      if (!result.success) setError(result.message);
     } catch (err) {
       console.error('Demo login error:', err);
       setError('Demo login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (
@@ -64,27 +75,19 @@ const Login = ({ onSwitchToRegister }) => {
           <div className="demo-credentials">
             <h3 className="demo-title">Try Demo</h3>
             <p className="demo-text">Experience the dashboard instantly</p>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleDemoLogin}
               className="demo-login-button"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <div className="loading-spinner"></div>
-              ) : (
-                'Open Demo Dashboard'
-              )}
+              {isSubmitting ? <div className="loading-spinner"></div> : 'Open Demo Dashboard'}
             </button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="emailOrUsername" className="form-label">Email or Username</label>
@@ -123,14 +126,8 @@ const Login = ({ onSwitchToRegister }) => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="auth-submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <div className="loading-spinner"></div>
-            ) : (
+          <button type="submit" className="auth-submit" disabled={isSubmitting}>
+            {isSubmitting ? <div className="loading-spinner"></div> : (
               <>
                 <LucideLogIn size={20} className="button-icon" />
                 Sign In
@@ -142,11 +139,7 @@ const Login = ({ onSwitchToRegister }) => {
         <div className="auth-footer">
           <p className="auth-switch-text">
             Don't have an account?
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="auth-switch-button"
-            >
+            <button type="button" onClick={onSwitchToRegister} className="auth-switch-button">
               Sign Up
             </button>
           </p>
