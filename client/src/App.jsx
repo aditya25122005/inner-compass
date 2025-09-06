@@ -1,8 +1,7 @@
 // import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './pages/Homepage.jsx';
-import Login from './pages/Login.jsx';
-import Signup from './pages/Signup.jsx';
+import AuthPage from './pages/AuthPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import PrivateRoute from './components/PrivateRoute.jsx';
 // import { useAuth } from './context/AuthContext.jsx';
@@ -12,8 +11,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/signup" element={<AuthPage />} />
         
         {/* Protected Dashboard Route */}
         <Route 
