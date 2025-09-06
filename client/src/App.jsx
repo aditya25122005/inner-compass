@@ -1,11 +1,11 @@
-import React from 'react';
+// import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './pages/Homepage.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import PrivateRoute from './components/PrivateRoute.jsx';
-import { useAuth } from './context/AuthContext.jsx';
+// import { useAuth } from './context/AuthContext.jsx';
 
 function App() {
   return (

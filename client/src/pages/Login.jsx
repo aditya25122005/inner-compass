@@ -20,7 +20,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await API.post("/login", formData);
+      const response = await API.post("auth/login", formData);
       if (response.data.message === "Login successful") {
         login(response.data.user, response.data.accessToken);
         setMessage("Login successful! Redirecting...");

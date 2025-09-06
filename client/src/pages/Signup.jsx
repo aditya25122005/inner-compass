@@ -22,7 +22,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await API.post("/register", formData);
+      const response = await API.post("auth/register", formData);
       if (response.data.message === "User registered successfully") {
         setMessage("🎉 Registration successful! Redirecting to login...");
         setIsError(false);
