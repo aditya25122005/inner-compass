@@ -29,8 +29,11 @@ connectDB()
   });
 
 // Routes
-import authRoutes from "./routes/user.route.js"; // create this later
+import authRoutes from "./routes/user.route.js";
+import chatbotRoutes from "./routes/chatbot.route.js";
+
 app.use("/api/auth", authRoutes); // localhost:(5000 OR 8000)/api/auth/... ( register, login, logout, refresh-token, etc.)
+app.use("/api/chatbot", chatbotRoutes); // localhost:(5000 OR 8000)/api/chatbot/... ( chat, history, mood-analysis, etc.)
 
 // Default route
 app.get("/", (req, res) => {
