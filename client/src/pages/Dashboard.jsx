@@ -1,7 +1,7 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate, Link } from 'react-router-dom';
-import { MessageCircle, BarChart3, BookOpen, LogOut, Home } from 'lucide-react';
+import { MessageCircle, BarChart3, BookOpen, LogOut, Home, Search, HeartPulse } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, logout, token } = useAuth();
@@ -17,7 +17,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -79,7 +79,10 @@ const Dashboard = () => {
           </Link>
 
           {/* Mood Tracking Card - Placeholder */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 opacity-75">
+          <Link
+            to="/dashboard"
+            className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 opacity-75 cursor-not-allowed"
+          >
             <div className="flex items-center space-x-4 mb-4">
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-lg">
                 <BarChart3 className="h-8 w-8 text-white" />
@@ -95,26 +98,57 @@ const Dashboard = () => {
             <div className="flex items-center text-gray-400 text-sm font-medium">
               <span>Feature in Development</span>
             </div>
-          </div>
+          </Link>
 
-          {/* Journal Card - Placeholder */}
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 opacity-75">
+          {/* Digital Journal Card */}
+          <Link
+            to="/journal"
+            className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow group"
+          >
             <div className="flex items-center space-x-4 mb-4">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-3 rounded-lg">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-3 rounded-lg group-hover:scale-105 transition-transform">
                 <BookOpen className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Digital Journal</h3>
-                <p className="text-sm text-gray-500">Coming Soon</p>
+                <p className="text-sm text-gray-500">Write, reflect, and grow</p>
               </div>
             </div>
             <p className="text-gray-600 text-sm mb-4">
               Write, reflect, and grow with guided journal prompts and personal insights.
             </p>
-            <div className="flex items-center text-gray-400 text-sm font-medium">
-              <span>Feature in Development</span>
+            <div className="flex items-center text-purple-600 text-sm font-medium">
+              <span>Start Your Journal</span>
+              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
-          </div>
+          </Link>
+
+          {/* Resources Card - New Link Added */}
+          <Link
+            to="/resources"
+            className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow group"
+          >
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 rounded-lg group-hover:scale-105 transition-transform">
+                <HeartPulse className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Nearby Doctors</h3>
+                <p className="text-sm text-gray-500">Find local mental health support</p>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">
+              Find and connect with nearby mental health professionals and support groups.
+            </p>
+            <div className="flex items-center text-yellow-600 text-sm font-medium">
+              <span>Find Resources</span>
+              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
         </div>
 
         {/* Quick Access Section */}
@@ -128,20 +162,27 @@ const Dashboard = () => {
               <MessageCircle className="h-4 w-4 mr-2" />
               Start AI Chat
             </Link>
-            <button
-              disabled
+            <Link
+              to="/dashboard"
               className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
             >
               <BarChart3 className="h-4 w-4 mr-2" />
               Log Mood (Coming Soon)
-            </button>
-            <button
-              disabled
-              className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
+            </Link>
+            <Link
+              to="/journal"
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
             >
               <BookOpen className="h-4 w-4 mr-2" />
-              Write Journal (Coming Soon)
-            </button>
+              Write Journal
+            </Link>
+            <Link
+              to="/resources"
+              className="inline-flex items-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Find Resources
+            </Link>
           </div>
         </div>
       </main>

@@ -9,8 +9,6 @@ const generateAccessAndRefreshToken = async (userId) => {
     
     const accessToken = user.generateAccessToken(); // defined in user.model
     const refreshToken = user.generateRefreshToken();
-    
-
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 

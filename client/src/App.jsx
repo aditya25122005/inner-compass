@@ -6,6 +6,7 @@ import AuthPage from './pages/AuthPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import ChatbotPage from './pages/ChatbotPage.jsx';
 import PrivateRoute from './components/PrivateRoute.jsx';
+import Resources from './pages/Resources.jsx';
 // import { useAuth } from './context/AuthContext.jsx';
 
 function App() {
@@ -38,6 +39,16 @@ function App() {
             <PrivateRoute>
               <Journal />
              </PrivateRoute>
+          } 
+        />
+
+        {/* Resources route */}
+        <Route 
+          path="/resources" 
+          element={
+            <PrivateRoute>
+              <Resources />
+            </PrivateRoute>
           } 
         />
         {/* A fallback for any unknown URL, redirects to the homepage */}
