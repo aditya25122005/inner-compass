@@ -1,4 +1,5 @@
 // import React from 'react';
+import Journal from './pages/Journal.jsx';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './pages/Homepage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
@@ -24,11 +25,20 @@ function App() {
             </PrivateRoute>
           } 
         />
-        
+
         {/* Chatbot Route - Direct Access */}
         <Route 
           path="/chatbot" 
           element={<ChatbotPage />} 
+        />
+        {/* New Protected Journal Route */}
+        <Route 
+          path="/journal" 
+          element={
+            <PrivateRoute>
+              <Journal />
+             </PrivateRoute>
+          } 
         />
         {/* A fallback for any unknown URL, redirects to the homepage */}
         <Route path="*" element={<Navigate to="/" />} />
