@@ -5,16 +5,18 @@ const journalEntrySchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     mood: {
       type: String,
-      enum: ["Happy", "Sad", "Anxious", "Calm", "Angry", "neutral"],
+      enum: ["happy", "sad", "anxious", "calm", "angry", "neutral"],
       required: true,
     },
-    content: { type: String, required: true }, // The journal text
+    text: { type: String, required: true },
     analysis: {
-      sentimentScore: String, // e.g., from -1 (negative) to 1 (positive)
-      stressLevel: String, // e.g., from 0 (low) to 1 (high)
+      sentimentScore: Number,
+      stressLevel: Number,
       keywords: [String],
     },
-    aiReport : {type: String}
+    aiReport: { type: String },
   },
   { timestamps: true }
 );
+
+export default mongoose.model("JournalEntry", journalEntrySchema);

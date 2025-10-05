@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import ChatbotPage from './pages/ChatbotPage.jsx';
 import PrivateRoute from './components/PrivateRoute.jsx';
 import Resources from './pages/Resources.jsx';
+import DailyTasksPage from './pages/DailyTasksPage.jsx';
 // import { useAuth } from './context/AuthContext.jsx';
 
 function App() {
@@ -48,6 +49,15 @@ function App() {
           element={
             <PrivateRoute>
               <Resources />
+            </PrivateRoute>
+          } 
+        />
+        {/* Daily Tasks page route */}
+        <Route 
+          path="/tasks" 
+          element={
+            <PrivateRoute>
+              <DailyTasksPage />
             </PrivateRoute>
           } 
         />

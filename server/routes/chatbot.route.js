@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
 import { ChatMessage } from '../models/chatBot.model.js';
 import geminiService from '../services/geminiService.js';
 import mongoose from 'mongoose';

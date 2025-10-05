@@ -22,6 +22,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-/* eslint-disable react-refresh/only-export-components */
+
 
 export const useAuth = () => useContext(AuthContext);

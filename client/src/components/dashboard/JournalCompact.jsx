@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Loader2, ArrowRight } from 'lucide-react';
-// FIX: Path corrected to '../../services/api.js' -- assuming components/ is directly under src/
-// If the error persists after this, the file path should be '../../../services/api.js'
 import { journalAPI } from '../../services/api.js'; 
 
 const MoodIcon = ({ mood }) => {
@@ -23,19 +21,15 @@ const MoodIcon = ({ mood }) => {
 const JournalCompact = () => {
     const [entries, setEntries] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    // Fetch the last few journal entries
     useEffect(() => {
         const loadJournalEntries = async () => {
             setIsLoading(true);
             try {
-                // The backend must be configured to return data sorted by date (newest first).
-                // Or, you can sort it here: data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 const data = await journalAPI.getAllEntries();
                 setEntries(data);
             } catch (error) {
                 console.error("Failed to load journal entries for dashboard:", error);
-                setEntries([]); // Set to empty array on failure to show the 'no entries' message
+                setEntries([]);
             } finally {
                 setIsLoading(false);
             }
