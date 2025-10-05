@@ -23,6 +23,7 @@ const Login = ({ onToggleMode }) => {
       const response = await API.post("auth/login", formData);
       if (response.data.message === "Login successful") {
         login(response.data.user, response.data.accessToken);
+        localStorage.setItem("token", response.data.accessToken); // new line added
         setMessage("Login successful! Redirecting...");
         setIsError(false);
         setTimeout(() => navigate("/dashboard"), 1500);

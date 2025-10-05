@@ -3,6 +3,10 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./db/db.js";
+import journalRoutes from './routes/journal.route.js'; 
+import resourceRoutes from './routes/resource.route.js';
+import taskRoutes from './routes/task.route.js'; 
+import dashboardRoutes from './routes/dashboard.route.js'; 
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +38,10 @@ import chatbotRoutes from "./routes/chatbot.route.js";
 
 app.use("/api/auth", authRoutes); // localhost:(5000 OR 8000)/api/auth/... ( register, login, logout, refresh-token, etc.)
 app.use("/api/chatbot", chatbotRoutes); // localhost:(5000 OR 8000)/api/chatbot/... ( chat, history, mood-analysis, etc.)
+app.use('/api/journal', journalRoutes); 
+app.use('/api/resources', resourceRoutes); 
+app.use('/api/tasks', taskRoutes);
+app.use('/api/dashboard', dashboardRoutes); 
 
 // Default route
 app.get("/", (req, res) => {
