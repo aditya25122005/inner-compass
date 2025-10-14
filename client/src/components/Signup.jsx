@@ -104,7 +104,6 @@ const Signup = ({ onToggleMode }) => {
           />
         </div>
 
-        {/* Password and Age on one line (4:1 ratio) */}
         <div className="grid grid-cols-5 gap-3">
           <div className="col-span-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">

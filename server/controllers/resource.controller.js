@@ -7,7 +7,7 @@ const MOCK_RESOURCES = [
         type: 'Clinic',
         address: '123 Civil Lines, New Delhi',
         contact: '011-23456789',
-        // Coordinates for New Delhi (Example)
+       
         location: { type: 'Point', coordinates: [77.2090, 28.6139] } 
     },
     {
@@ -28,14 +28,8 @@ const MOCK_RESOURCES = [
     }
 ];
 
-// @desc    Get nearby mental health resources (doctors, centers, groups)
-// @route   GET /api/resources/nearby
-// @access  Private (Requires authentication/token)
 const getNearbyResources = asyncHandler(async (req, res) => {
-    // FUTURE: In a real scenario, we would read the user's current location (lat/lng) 
-    //         from req.query and use MongoDB's Geospatial query here, or call the Google Places API.
 
-    // For now, we return the MOCK data to fix the frontend 404 error
     res.status(200).json({
         data: MOCK_RESOURCES,
         message: 'Successfully loaded nearby resources (MOCK data).'

@@ -1,9 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Task from '../models/Task.model.js'
 
-// @desc    Get all current tasks for the authenticated user
-// @route   GET /api/tasks
-// @access  Private (protect)
+
 const getTasks = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     console.log(userId);
@@ -31,9 +29,7 @@ const getTasks = asyncHandler(async (req, res) => {
     res.status(200).json(tasks);
 });
 
-// @desc    Update the completion status of a specific task
-// @route   PUT /api/tasks/:id
-// @access  Private (protect)
+
 const updateTaskStatus = asyncHandler(async (req, res) => {
     const taskId = req.params.id;
     const { isCompleted } = req.body; 

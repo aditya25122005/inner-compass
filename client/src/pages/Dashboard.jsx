@@ -84,14 +84,14 @@ const Dashboard = () => {
                     </Link>
 
                     {/*  Slot 2: Mental Status Card */}
-                    {/* This card fetches data and displays the AI-driven Mental Score */}
+                    
                     <MentalStatusCard />
                     
                     {/*  Slot 3: Progress Card  */}
                     
                     <ProgressCard /> 
 
-                    {/* Slot 4: Daily Task Manager (Existing Link) */}
+                    {/* Slot 4: Daily Task Manager */}
                     <Link
                         to="/tasks" 
                         className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow group h-full"
@@ -116,13 +116,13 @@ const Dashboard = () => {
                         </div>
                     </Link>
                     
-                    {/* Slot 5: Digital Journal (Existing Live Data Card) */}
+                    {/* Slot 5: Digital Journal  */}
                     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 h-full hover:shadow-lg transition-shadow">
                          <JournalCompact />
                     </div>
 
 
-                    {/* Slot 6: Resources Card (Existing Link) */}
+                    {/* Slot 6: Resources Card*/}
                     <Link
                         to="/resources"
                         className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow group h-full"
@@ -149,7 +149,7 @@ const Dashboard = () => {
                     
                 </div>
 
-                {/* Quick Access Section (kept as is) */}
+                {/* Quick Access Section*/}
                 <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
                     <div className="flex flex-wrap gap-3">

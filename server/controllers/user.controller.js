@@ -2,12 +2,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
-// ------------------- Token Generation -------------------
+//Token Generation
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);    
     
-    const accessToken = user.generateAccessToken(); // defined in user.model
+    const accessToken = user.generateAccessToken(); 
     const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -18,7 +18,7 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
-// ------------------- Register -------------------
+// Register
 const register = async (req, res) => {
   try {
     const { username, email, password, age, sex, name } = req.body;
@@ -50,7 +50,7 @@ const register = async (req, res) => {
   }
 };
 
-// ------------------- Login -------------------
+// Login
 const login = async (req, res) => {
   try {
     const { username, password, email } = req.body;
@@ -100,7 +100,7 @@ const login = async (req, res) => {
   }
 };
 
-// ------------------- Refresh Token -------------------
+// Refresh
 const refreshAccessToken = async (req, res) => {
   try {
     const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -137,7 +137,7 @@ const refreshAccessToken = async (req, res) => {
   }
 };
 
-// ------------------- Logout -------------------
+// Logout
 const logout = async (req, res) => {
   try {
     const userId = req.user._id;

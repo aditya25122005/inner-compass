@@ -8,14 +8,14 @@ class GeminiService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
     if (!this.apiKey) {
-      console.error('❌ GEMINI_API_KEY not found in environment variables');
+      console.error(' GEMINI_API_KEY not found in environment variables');
       throw new Error('Gemini API key not configured in .env file');
     }
     
     this.genAI = new GoogleGenerativeAI(this.apiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     
-    console.log('✅ Gemini AI service initialized successfully');
+    console.log(' Gemini AI service initialized successfully');
   }
 
   async generateResponse(userMessage, context = [], systemPrompt = null) {
