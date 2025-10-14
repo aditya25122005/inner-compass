@@ -1,9 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Journal from '../models/journalEntry.model.js';
 
-// @desc    Create a new journal entry
-// @route   POST /api/journal
-// @access  Private
+
 const createEntry = asyncHandler(async (req, res) => {
   const { text, mood } = req.body;
 
@@ -30,9 +28,6 @@ const createEntry = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get all journal entries for the authenticated user
-// @route   GET /api/journal
-// @access  Private
 const getAllEntries = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const entries = await Journal.find({ user: userId }).sort({ createdAt: -1 });

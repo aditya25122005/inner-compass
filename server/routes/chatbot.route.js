@@ -42,7 +42,7 @@ router.post('/chat', async (req, res) => {
     await userMessage.save();
 
     // Generate bot response using Gemini
-    console.log(`🤖 Generating response for ${req.user?.email || 'test user'}...`);
+    console.log(` Generating response for ${req.user?.email || 'test user'}...`);
     const botResponse = await geminiService.generateResponse(message, context);
 
     // Save bot message

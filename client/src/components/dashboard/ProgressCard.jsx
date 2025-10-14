@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'; 
 import { Zap, Activity, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { dashboardAPI } from '../../services/api'; // Ensure this path is correct
-
+import { dashboardAPI } from '../../services/api';
 const ProgressCard = () => {
     const { token } = useAuth();
     const [metrics, setMetrics] = useState(null);

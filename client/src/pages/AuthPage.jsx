@@ -8,7 +8,7 @@ const AuthPage = () => {
   const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
 
-  // Set initial mode based on current route
+ 
   useEffect(() => {
     setIsLogin(location.pathname === '/login');
   }, [location.pathname]);

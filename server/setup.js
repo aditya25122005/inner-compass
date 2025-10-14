@@ -20,7 +20,7 @@ const question = (prompt) => {
 };
 
 async function setupEnvironment() {
-  console.log('🚀 InnerCompass Server Setup\n');
+  console.log('InnerCompass Server Setup\n');
   console.log('=' .repeat(50));
   
   const envPath = path.join(__dirname, '.env');
@@ -28,7 +28,7 @@ async function setupEnvironment() {
   
   // Check if .env already exists
   if (fs.existsSync(envPath)) {
-    console.log('⚠️  .env file already exists!');
+    console.log('  .env file already exists!');
     const overwrite = await question('Do you want to overwrite it? (y/N): ');
     if (overwrite.toLowerCase() !== 'y') {
       console.log('Setup cancelled. Your existing .env file is unchanged.');
@@ -43,29 +43,29 @@ async function setupEnvironment() {
   const config = {};
   
   // Database
-  console.log('📀 Database Configuration:');
+  console.log(' Database Configuration:');
   config.MONGODB_URI = await question('MongoDB URI (or press Enter for local): ') 
     || 'mongodb://localhost:27017/inner-compass';
   
   // Server
-  console.log('\n🌐 Server Configuration:');
+  console.log('Server Configuration:');
   config.PORT = await question('Server port (default 5000): ') || '5000';
   config.CORS_ORIGIN = await question('Frontend URL (default http://localhost:3000): ') 
     || 'http://localhost:3000';
   
   // JWT Secrets
-  console.log('\n🔐 Security Configuration:');
+  console.log('Security Configuration:');
   config.ACCESS_TOKEN_SECRET = await question('Access token secret (or press Enter for auto-generated): ') 
     || generateRandomSecret(64);
   config.REFRESH_TOKEN_SECRET = await question('Refresh token secret (or press Enter for auto-generated): ') 
     || generateRandomSecret(64);
   
   // Gemini API
-  console.log('\n🤖 Gemini AI Configuration:');
+  console.log('Gemini AI Configuration:');
   config.GEMINI_API_KEY = await question('Gemini API Key (required for chatbot functionality): ');
   
   if (!config.GEMINI_API_KEY) {
-    console.log('\n⚠️  WARNING: No Gemini API key provided!');
+    console.log('WARNING: No Gemini API key provided!');
     console.log('The chatbot functionality will not work without a valid Gemini API key.');
     console.log('You can get one from: https://makersuite.google.com/app/apikey');
     const continueSetup = await question('Continue anyway? (y/N): ');
@@ -111,21 +111,21 @@ async function setupEnvironment() {
   // Write .env file
   fs.writeFileSync(envPath, envContent);
   
-  console.log('\n✅ Environment configuration complete!');
-  console.log(`📝 Configuration saved to: ${envPath}`);
+  console.log('Environment configuration complete!');
+  console.log(`Configuration saved to: ${envPath}`);
   
   // Show next steps
-  console.log('\n🎯 Next Steps:');
+  console.log('Next Steps:');
   console.log('1. Install dependencies: npm install');
   console.log('2. Start the server: npm start');
   console.log(`3. Server will be available at: http://localhost:${config.PORT}`);
   console.log(`4. Chatbot API will be at: http://localhost:${config.PORT}/api/chatbot`);
   
   if (!config.GEMINI_API_KEY) {
-    console.log('\n⚠️  Remember to add your Gemini API key to the .env file!');
+    console.log(' Remember to add your Gemini API key to the .env file!');
   }
   
-  console.log('\n🧪 Testing:');
+  console.log('Testing:');
   console.log('- Test Gemini service: node tests/gemini.test.js');
   console.log('- Test server endpoints: node tests/server.test.js');
   
