@@ -27,7 +27,6 @@ It provides a safe digital space for users to track emotions, practice mindfulne
   - Sentiment analysis for journal entries  
   - Recommendation engine for mindfulness resources  
 - **Hosting:** (e.g., Vercel / Netlify for frontend, Render / Heroku for backend, or AWS/GCP for ML models)  
-
 ---
 
 ## 🚀 Getting Started
