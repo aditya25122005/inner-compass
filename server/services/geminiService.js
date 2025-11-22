@@ -1,111 +1,153 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from "dotenv";
 
-// Ensure dotenv is loaded
 dotenv.config();
+
+console.log("🔵 geminiService.js loaded");
 
 class GeminiService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
+
     if (!this.apiKey) {
-      console.error(' GEMINI_API_KEY not found in environment variables');
-      throw new Error('Gemini API key not configured in .env file');
+      console.error("❌ GEMINI_API_KEY missing in .env");
+      this.genAI = null;
+      this.model = null;
+      return;
     }
-    
-    this.genAI = new GoogleGenerativeAI(this.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-    
-    console.log(' Gemini AI service initialized successfully');
+
+    // FINAL working model
+    this.modelName = "models/gemini-2.5-flash";
+
+    try {
+      this.genAI = new GoogleGenerativeAI(this.apiKey);
+      this.model = this.genAI.getGenerativeModel({
+        model: this.modelName,
+      });
+
+      console.log(`✨ Gemini AI initialized: ${this.modelName}`);
+    } catch (err) {
+      console.error("❌ Gemini initialization failed:", err.message);
+      this.genAI = null;
+      this.model = null;
+    }
   }
 
-  async generateResponse(userMessage, context = [], systemPrompt = null) {
+  formatContext(context = []) {
+    return context.map((msg) => ({
+      role: msg.sender === "bot" ? "model" : "user",
+      parts: [{ text: msg.message }],
+    }));
+  }
+
+  async generateResponse(message, context = [], systemPrompt = null) {
+    if (!this.model) {
+      return "AI service unavailable. Try again later.";
+    }
+
     try {
-      // Prepare conversation history for context
-      let conversationContext = '';
-      if (context.length > 0) {
-        conversationContext = context
-          .slice(-5) // Last 5 messages for context
-          .map(msg => `${msg.sender === 'bot' ? 'Assistant' : 'User'}: ${msg.message}`)
-          .join('\n');
+      // Build the conversation messages
+      const messages = [];
+
+      // 🔥 Instead of role: "system", we prepend as a USER message
+      if (systemPrompt) {
+        messages.push({
+          role: "user",
+          parts: [{ text: systemPrompt }],
+        });
       }
 
-      // Default system prompt for InnerCompass mood chatbot
-      const defaultSystemPrompt = `You are InnerCompass, a compassionate and supportive AI companion designed to help users with their emotional well-being and mental health journey. You provide:
+      messages.push(...this.formatContext(context));
 
-1. Empathetic listening and emotional support
-2. Practical coping strategies and mindfulness techniques
-3. Mood tracking insights and reflection prompts
-4. Gentle guidance for self-care and personal growth
-5. Crisis support awareness (always recommend professional help for serious issues)
+      messages.push({
+        role: "user",
+        parts: [{ text: message }],
+      });
 
-Keep responses warm, understanding, and conversational. Focus on the user's emotional needs while being supportive but not providing medical advice.`;
+      const result = await this.model.generateContent({
+        contents: messages,
+      });
 
-      const prompt = systemPrompt || defaultSystemPrompt;
-      
-      // Create the full conversation prompt
-      const fullPrompt = conversationContext 
-        ? `${prompt}\n\nPrevious conversation:\n${conversationContext}\n\nUser: ${userMessage}\n\nAssistant:`
-        : `${prompt}\n\nUser: ${userMessage}\n\nAssistant:`;
-
-      const result = await this.model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
-
-      if (!text) {
-        throw new Error('Empty response from Gemini API');
-      }
-
-      return text.trim();
-
-    } catch (error) {
-      console.error('Gemini API Error:', error.message);
-      
-      // Fallback responses when API fails
-      const fallbackResponses = [
-        "I'm having trouble connecting to my AI service right now, but I'm here to listen. Can you tell me more about how you're feeling?",
-        "Sorry, I'm experiencing some technical difficulties. How are you feeling today? I'd love to support you.",
-        "I'm not able to process that properly right now, but I care about your well-being. What's on your mind?",
-        "There seems to be a connection issue on my end. Is there something specific you'd like to talk about regarding your mood or feelings?",
-        "I'm having some technical troubles, but I'm still here for you. How can I support your emotional well-being today?"
-      ];
-      
-      return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+      return result?.response?.text() || "I'm having trouble right now.";
+    } catch (err) {
+      console.error("Gemini Error:", err.message);
+      return "I'm having technical trouble right now. Please try again.";
     }
   }
 
-  async testConnection() {
+  // ---------- MOOD ANALYZER ----------
+  async analyzeMood(message, context = []) {
+    const systemPrompt = `
+You are a mood analyzer.
+ALWAYS respond ONLY in JSON:
+
+{
+  "emotion": "string",
+  "intensity": 1-10,
+  "advice": "string",
+  "response": "string"
+}
+`;
+
+    const raw = await this.generateResponse(message, context, systemPrompt);
+
+    console.log("MOOD RAW RESULT:", raw);
+
     try {
-      const response = await this.generateResponse("Hello, this is a test message. Please respond briefly.");
-      return { success: true, response };
-    } catch (error) {
-      return { success: false, error: error.message };
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error("JSON missing");
+
+      return JSON.parse(match[0]);
+    } catch (err) {
+      console.log("⚠ JSON PARSE ERROR — returning fallback");
+      return {
+        emotion: "unknown",
+        intensity: 0,
+        advice: "I couldn't analyze your mood due to a technical issue.",
+        response: raw,
+      };
     }
   }
 
-  // Mood analysis specific method
-  async analyzeMood(userMessage, previousMessages = []) {
-    const moodPrompt = `You are InnerCompass, an AI mood analyzer. Analyze the user's emotional state from their message and provide:
+  // Journal prompt
+async generateJournalPrompt(topic = null) {
+  const system = `
+You are a journal prompt generator AI.
+Always return JSON in the following format ONLY:
 
-1. Primary emotion detected (happy, sad, anxious, angry, neutral, mixed, etc.)
-2. Intensity level (1-10)
-3. Brief supportive response
-4. Suggested coping strategy if needed
+{
+  "topic": "string",
+  "prompt": "string",
+  "generatedAt": "ISO date string"
+}
 
-Keep your response structured but conversational.`;
+JSON only. No markdown. No explanations.
+`;
 
-    return await this.generateResponse(userMessage, previousMessages, moodPrompt);
+  const userPrompt = topic
+    ? `Give me a deep journal prompt about: ${topic}`
+    : `Give me a meaningful self-reflection journal prompt.`;
+
+  const raw = await this.generateResponse(userPrompt, [], system);
+
+  console.log("RAW JOURNAL PROMPT:", raw);
+
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON found");
+
+    return JSON.parse(jsonMatch[0]);
+
+  } catch (err) {
+    console.log("⚠ JSON PARSE ERROR — returning fallback");
+    return {
+      topic: topic || "General",
+      prompt: raw,
+      generatedAt: new Date().toISOString(),
+    };
   }
+}
 
-  // Journal reflection method
-  async generateJournalPrompt(topic = null) {
-    const journalPromptMessage = topic 
-      ? `Create a thoughtful journal prompt about ${topic}` 
-      : "Create a mindful journal prompt for self-reflection";
-
-    const journalPrompt = `You are InnerCompass, providing meaningful journal prompts for self-reflection and emotional growth. Create a single, thoughtful prompt that encourages introspection and emotional awareness.`;
-
-    return await this.generateResponse(journalPromptMessage, [], journalPrompt);
-  }
 }
 
 export default new GeminiService();

@@ -1,159 +1,298 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext.jsx';
-import { Loader2, PhoneCall, MapPin, AlertTriangle, Search, Filter, Compass, HeartPulse } from 'lucide-react';
-const mockResources = [
-    { _id: 'res1', name: 'City Wellness Center (Mock)', type: 'Clinic', address: 'Default: New Delhi', contact: '011-23456789' },
-    { _id: 'res2', name: 'Dr. Priya Sharma (Mock)', type: 'Therapist', address: 'Default: Connaught Place', contact: '9876543210' },
-];
+import React, { useEffect, useState, useRef } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  Circle,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import axios from "axios";
+import {
+  Loader2,
+  PhoneCall,
+  Search,
+  MapPin,
+  Building2,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext.jsx";
 
-const Resources = () => {
-    const { token } = useAuth();
-    const [resources, setResources] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [userLocation, setUserLocation] = useState(null);
-    const [isCrisis, setIsCrisis] = useState(false);
+// Custom marker
+const LOCAL_MARKER_IMG = "/marker.png";
 
-    // Default map coordinates
-    const DEFAULT_LAT = 28.6139;
-    const DEFAULT_LNG = 77.2090;
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: new URL("leaflet/dist/images/marker-icon-2x.png", import.meta.url).href,
+  iconUrl: new URL("leaflet/dist/images/marker-icon.png", import.meta.url).href,
+  shadowUrl: new URL("leaflet/dist/images/marker-shadow.png", import.meta.url).href,
+});
 
-    const fetchResources = async (lat, lng) => {
-        setLoading(true);
-        try {
-            
-            const response = await axios.get(`http://localhost:8000/api/resources/nearby?lat=${lat}&lng=${lng}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            
-            setResources(response.data.data || mockResources);
-            setLoading(false);
-        } catch (err) {
-            setResources(mockResources); 
-            setError("Failed to fetch resources list from API. Displaying mock data.");
-            setLoading(false);
-        }
-    };
+const customIcon = new L.Icon({
+  iconUrl: LOCAL_MARKER_IMG,
+  iconSize: [38, 38],
+  iconAnchor: [19, 38],
+  popupAnchor: [0, -30],
+});
 
-    useEffect(() => {
-        if (!token) {
-            setError("Please log in to access resources.");
-            setLoading(false);
-            return;
-        }
-        
-        // --- GEOLOCATION LOGIC ---
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    setUserLocation({ lat: latitude, lng: longitude });
-                    fetchResources(latitude, longitude); 
-                },
-                (err) => {
-                    console.error("Geolocation error:", err);
-                    setError("Location access denied. Using default center for map.");
-                    
-                    fetchResources(DEFAULT_LAT, DEFAULT_LNG);
-                }
-            );
-        } else {
-            setError("Geolocation is not supported by your browser. Using default location.");
-            fetchResources(DEFAULT_LAT, DEFAULT_LNG);
-        }
-    }, [token]); 
+const DEFAULT_LAT = 28.6139;
+const DEFAULT_LNG = 77.209;
 
-    // Determine map center
-    const centerMap = userLocation || { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
-    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${centerMap.lng - 0.05}%2C${centerMap.lat - 0.03}%2C${centerMap.lng + 0.05}%2C${centerMap.lat + 0.03}&layer=mapnik&marker=${centerMap.lat}%2C${centerMap.lng}`;
+// ----------------------
+// ⭐ Debounce Function
+// ----------------------
+function debounce(func, delay = 900) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
+}
 
-    if (loading) {
-        return <div className="text-center p-8 text-xl flex justify-center items-center h-screen"><Loader2 className="animate-spin mr-3" /> Loading resources...</div>;
+function Recenter({ lat, lng }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng], 13);
+  }, [lat, lng]);
+  return null;
+}
+
+export default function ResourcesLeaflet() {
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState([]);
+  const [error, setError] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [radius, setRadius] = useState(3000);
+
+  const mapRef = useRef();
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  // ----------------------
+  // ⭐ Fetch API (same)
+  // ----------------------
+  const fetchResources = async (lat, lng, rad = radius) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${API_BASE}/api/resources/nearby?lat=${lat}&lng=${lng}&radius=${rad}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      setResources(res.data.data || []);
+    } catch (err) {
+      console.log(err);
+      setResources([]);
+      setError("Unable to load resources");
     }
-    
-    // JSX LAYOUT
-    return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
-            
-            {/* CRITICAL HOTLINE BAR */}
-            <div className={`w-full bg-indigo-600 text-white p-3 flex justify-between items-center transition-colors duration-300`}>
-                <div className='flex items-center'>
-                    <AlertTriangle className="w-5 h-5 mr-3" />
-                    <span className='font-semibold'>CRISIS HOTLINE: 1800-HELPNOW</span>
-                </div>
-                <button className='px-3 py-1 bg-white text-red-600 rounded-full text-sm font-bold hover:bg-gray-100'>
-                    <PhoneCall className="w-4 h-4 inline mr-1" /> Call Now
-                </button>
-            </div>
+    setLoading(false);
+  };
 
-            <div className="max-w-7xl mx-auto w-full p-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
-                    <Compass className="w-7 h-7 mr-3 text-indigo-600" /> Professional Support Finder
-                </h1>
+  // ----------------------
+  // ⭐ Debounced version of fetchResources
+  // ----------------------
+  const debouncedFetch = useRef(
+    debounce((lat, lng, rad) => fetchResources(lat, lng, rad), 900)
+  ).current;
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[75vh]">
-                    
-                    {/* --- Right Column: Keyless Map Display --- */}
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                         <iframe 
-                            width="100%" 
-                            height="100%" 
-                            frameBorder="0" 
-                            scrolling="no" 
-                            marginHeight="0" 
-                            marginWidth="0" 
-                            src={mapUrl}
-                            style={{ border: 'none', minHeight: '500px' }}
-                            title="Nearby Resources Map"
-                        ></iframe>
-                        {userLocation && (
-                            <p className="text-xs text-center text-gray-600 p-2">Map centered on your current location ({centerMap.lat.toFixed(3)}, {centerMap.lng.toFixed(3)})</p>
-                        )}
-                        
-                    </div>
+  // ----------------------
+  // Get user location
+  // ----------------------
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          fetchResources(latitude, longitude);
+        },
+        () => {
+          setUserLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+          fetchResources(DEFAULT_LAT, DEFAULT_LNG);
+        }
+      );
+    }
+  }, []);
 
-                    {/* --- Left Column: Resource List --- */}
-                    <div className="lg:col-span-1 flex flex-col space-y-4">
-                        
-                        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200">
-                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                                <Search className="w-5 h-5 mr-2" /> Search & Filter
-                            </h3>
-                            <input type="text" placeholder="Search resources..." className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3" />
-                            <select className="w-full py-2 px-3 border border-gray-300 rounded-lg bg-white text-gray-700">
-                                <option>Filter by Type...</option>
-                                <option>Therapist/Counselor</option>
-                            </select>
-                        </div>
-                        
-                        <div className="flex-1 bg-white p-4 rounded-xl shadow-md border border-gray-200 overflow-y-auto space-y-3">
-                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                                <HeartPulse className="w-5 h-5 mr-2 text-red-500" /> Resource Listings
-                            </h3>
-                            
-                            {resources.length === 0 ? (
-                                <p className="text-gray-500 italic">No resources found in your database.</p>
-                            ) : (
-                                resources.map(resource => (
-                                    <div key={resource._id} className="p-3 border border-gray-100 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer">
-                                        <p className="font-semibold text-gray-800">{resource.name}</p>
-                                        <p className="text-indigo-600 text-sm">Type: {resource.type}</p>
-                                        <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                                            <span>{resource.address}</span>
-                                            <a href={`tel:${resource.contact}`} className="flex items-center text-blue-500 hover:underline">
-                                                <PhoneCall className='w-3 h-3 mr-1' /> Contact
-                                            </a>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  // ----------------------
+  // ⭐ Radius change (Debounced)
+  // ----------------------
+  useEffect(() => {
+    if (userLocation) {
+      debouncedFetch(userLocation.lat, userLocation.lng, radius);
+    }
+  }, [radius]);
+
+  const filtered = resources.filter((r) => {
+    if (filter !== "all" && (!r.type || !r.type.toLowerCase().includes(filter))) {
+      return false;
+    }
+    if (searchTerm) {
+      const t = searchTerm.toLowerCase();
+      if (
+        !r.name.toLowerCase().includes(t) &&
+        !r.address.toLowerCase().includes(t)
+      )
+        return false;
+    }
+    return true;
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-lg flex justify-between items-center">
+        <span className="flex items-center text-lg font-semibold">
+          <MapPin className="mr-2" /> Nearby Mental Health Resources
+        </span>
+
+        <a
+          href="tel:1800-HELPNOW"
+          className="flex items-center bg-white text-red-600 px-4 py-2 rounded shadow font-medium hover:bg-gray-50"
+        >
+          <PhoneCall className="mr-1" /> Emergency Hotline: 1800-HELPNOW
+        </a>
+      </div>
+
+      {/* Layout */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+
+        {/* MAP */}
+        <div className="lg:col-span-2">
+          <div className="bg-white shadow-lg rounded-xl overflow-hidden border">
+
+            {loading ? (
+              <div className="flex items-center justify-center h-96">
+                <Loader2 className="animate-spin mr-2" /> Loading map...
+              </div>
+            ) : (
+              <MapContainer
+                center={[userLocation.lat, userLocation.lng]}
+                zoom={13}
+                style={{ height: "70vh", width: "100%" }}
+                whenCreated={(m) => (mapRef.current = m)}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+                <Recenter lat={userLocation.lat} lng={userLocation.lng} />
+
+                {/* User location */}
+                <Marker position={[userLocation.lat, userLocation.lng]}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+
+                {/* Radius */}
+                <Circle
+                  center={[userLocation.lat, userLocation.lng]}
+                  radius={radius}
+                  pathOptions={{ color: "#6366F1", opacity: 0.35 }}
+                />
+
+                {/* Resource Markers */}
+                {filtered.map((r) => (
+                  <Marker
+                    key={r._id}
+                    position={[r.location.lat, r.location.lng]}
+                    icon={customIcon}
+                  >
+                    <Popup>
+                      <div className="font-semibold">{r.name}</div>
+                      <div className="text-sm text-gray-700">Type: {r.type}</div>
+                      <div className="text-xs text-gray-600 mt-1">{r.address}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Distance: {r.distanceKm} km
+                      </div>
+
+                      <div className="mt-2">
+                        <a
+                          href={`tel:${r.contact}`}
+                          className="text-indigo-600 font-medium text-sm"
+                        >
+                          <PhoneCall className="inline mr-1" /> Call
+                        </a>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            )}
+          </div>
         </div>
-    );
-};
 
-export default Resources;
+        {/* Sidebar */}
+        <div className="bg-white p-5 rounded-xl shadow-lg h-[70vh] overflow-y-auto sticky top-10 border">
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-3 text-gray-400" />
+            <input
+              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Search resources..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Radius */}
+          <div className="mb-5">
+            <label className="block font-semibold text-gray-700">
+              Search Radius: {(radius / 1000).toFixed(1)} km
+            </label>
+            <input
+              type="range"
+              min="1000"
+              max="20000"
+              step="1000"
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="w-full mt-2 accent-indigo-600"
+            />
+          </div>
+
+          {/* Filter Dropdown */}
+          <select
+            className="border p-2 w-full rounded-lg mb-4 focus:ring-indigo-500 focus:border-indigo-500"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">All Resources</option>
+            <option value="hospital">Hospital</option>
+            <option value="clinic">Clinic</option>
+            <option value="police">Police Station</option>
+            <option value="pharmacy">Pharmacy</option>
+            <option value="yoga">Yoga</option>
+          </select>
+
+          {/* Resource List */}
+          <div className="space-y-4">
+            {filtered.map((r) => (
+              <div
+                key={r._id}
+                className="p-4 border rounded-xl hover:bg-indigo-50 cursor-pointer transition shadow-sm"
+                onClick={() =>
+                  mapRef.current.setView([r.location.lat, r.location.lng], 15)
+                }
+              >
+                <div className="flex items-center mb-1">
+                  <Building2 className="mr-2 text-indigo-600" />
+                  <h3 className="font-semibold text-indigo-700">{r.name}</h3>
+                </div>
+
+                <p className="text-sm text-gray-700 capitalize">{r.type}</p>
+                <p className="text-xs text-gray-500 mt-1">{r.address}</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Distance: {r.distanceKm} km
+                </p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

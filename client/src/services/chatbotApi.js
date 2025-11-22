@@ -12,19 +12,21 @@ class ChatbotAPI {
     });
 
     // Add request interceptor to include auth token (disabled for testing)
-    this.client.interceptors.request.use(
-      (config) => {
-        // Temporarily disabled for testing without authentication
-        // const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
+this.client.interceptors.request.use(
+  (config) => {
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(

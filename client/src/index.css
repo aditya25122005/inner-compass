@@ -91,3 +91,81 @@
 .shadow-3xl {
   box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
 }
+
+
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fade-in 0.6s ease-out;
+}
+
+
+
+
+
+/* Global updated theme */
+/* ==============================
+   GLOBAL THEME COLORS
+============================== */
+:root {
+  --primary: #6366f1;       /* Indigo */
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+
+  --accent: #ec4899;        /* Pink */
+  --accent-light: #f472b6;
+
+  --success: #10b981;       /* Green */
+  --danger: #ef4444;        /* Red */
+
+  --bg: #f9fafb;
+  --surface: #ffffff;
+
+  --radius: 14px;
+}
+
+/* Beautiful Card */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  padding: 1.4rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+
+
+
+/* body */
+body {
+  background: linear-gradient(135deg, #eef2ff, #faf5ff);
+  font-family: 'Inter', sans-serif;
+}
+
+
+/* Leafet */
+.leaflet-container {
+  font: inherit;
+}

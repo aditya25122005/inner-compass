@@ -1,14 +1,16 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
 import User from "../models/user.model.js";
 
-//Token Generation
+// ------------------- Token Generation -------------------
 const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findById(userId);    
-    
-    const accessToken = user.generateAccessToken(); 
+    const user = await User.findById(userId);
+
+    const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
+
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -18,12 +20,16 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
-// Register
+// ------------------- Register -------------------
 const register = async (req, res) => {
   try {
     const { username, email, password, age, sex, name } = req.body;
 
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+
     if (existingUser) {
       return res
         .status(400)
@@ -41,7 +47,10 @@ const register = async (req, res) => {
       sex,
     });
 
-    const createdUser = await User.findById(newUser._id).select("-password");
+    const createdUser = await User.findById(newUser._id).select(
+      "-password -refreshToken"
+    );
+
     res
       .status(201)
       .json({ message: "User registered successfully", user: createdUser });
@@ -50,14 +59,16 @@ const register = async (req, res) => {
   }
 };
 
-// Login
+// ------------------- Login -------------------
 const login = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
-    console.log("Login attempt:", { username, email });
-    
+    const { username, email, password } = req.body;
 
-    const user = await User.findOne({ $or: [{ username }, { email }] });
+    // Login with username or email
+    const user = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+
     if (!user) {
       return res
         .status(400)
@@ -71,44 +82,96 @@ const login = async (req, res) => {
         .json({ message: "Invalid username/email or password" });
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-      user._id
-    );
+    const { accessToken, refreshToken } =
+      await generateAccessAndRefreshToken(user._id);
 
     const userWithoutPassword = await User.findById(user._id).select(
       "-password -refreshToken"
     );
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    };
-
-    res
-      .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", refreshToken, cookieOptions)
-      .status(200)
-      .json({
-        message: "Login successful",
-        user: userWithoutPassword,
-        accessToken,
-        refreshToken,
-      });
+    res.status(200).json({
+      message: "Login successful",
+      user: userWithoutPassword,
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Refresh
+// ------------------- Update Profile -------------------
+const updateProfile = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { name, age, sex } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  // Update fields
+  user.name = name || user.name;
+  user.age = age || user.age;
+  user.sex = sex || user.sex;
+
+  const updatedUser = await user.save();
+
+  const userToReturn = await User.findById(updatedUser._id).select(
+    "-password -refreshToken"
+  );
+
+  res.status(200).json({
+    message: "Profile updated successfully",
+    user: userToReturn,
+  });
+});
+
+// ------------------- UPLOAD PROFILE IMAGE -------------------
+const uploadProfileImage = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No image uploaded" });
+  }
+
+  // REAL IMAGE URL (served from /uploads)
+  // const imageUrl = `http://localhost:8000/${req.file.path}`;
+  const imageUrl = `${process.env.BASE_URL}/${req.file.path}`;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  user.profileImageUrl = imageUrl;
+  await user.save();
+
+  res.status(200).json({
+    message: "Image uploaded successfully",
+    profileImageUrl: imageUrl,
+  });
+});
+
+// ------------------- Refresh Token -------------------
 const refreshAccessToken = async (req, res) => {
   try {
-    const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
+    const incomingToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+
     if (!incomingToken) {
       return res.status(401).json({ message: "Refresh token required" });
     }
 
-    const decoded = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
+    const decoded = jwt.verify(
+      incomingToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
     const user = await User.findById(decoded._id);
 
     if (!user || user.refreshToken !== incomingToken) {
@@ -121,36 +184,32 @@ const refreshAccessToken = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    };
-
-    res
-      .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", refreshToken, cookieOptions)
-      .status(200)
-      .json({ accessToken, refreshToken });
+    res.status(200).json({ accessToken, refreshToken });
   } catch (error) {
     res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 };
 
-// Logout
+// ------------------- Logout -------------------
 const logout = async (req, res) => {
   try {
     const userId = req.user._id;
-    await User.findByIdAndUpdate(userId, { $unset: { refreshToken: 1 } });
 
-    res
-      .clearCookie("accessToken")
-      .clearCookie("refreshToken")
-      .status(200)
-      .json({ message: "Logged out successfully" });
+    await User.findByIdAndUpdate(userId, {
+      $unset: { refreshToken: 1 },
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-export { register, login, refreshAccessToken, logout };
+export {
+  register,
+  login,
+  refreshAccessToken,
+  logout,
+  updateProfile,
+  uploadProfileImage,
+};

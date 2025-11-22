@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Signup = ({ onToggleMode }) => {
   const [formData, setFormData] = useState({
@@ -11,8 +11,10 @@ const Signup = ({ onToggleMode }) => {
     age: "",
     sex: "",
   });
+
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,63 +24,60 @@ const Signup = ({ onToggleMode }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Use email as username for backend compatibility
-      const submitData = {
-        ...formData,
-        username: formData.email
-      };
+      const submitData = { ...formData, username: formData.email };
+
       const response = await API.post("auth/register", submitData);
+
       if (response.data.message === "User registered successfully") {
         setMessage("🎉 Registration successful! You can now sign in.");
         setIsError(false);
         setTimeout(() => onToggleMode(), 2000);
       }
     } catch (error) {
-      if (error.response && error.response.data.message) {
-        setMessage(error.response.data.message);
-      } else {
-        setMessage("An error occurred. Please try again.");
-      }
+      setMessage(
+        error.response?.data?.message || "Something went wrong. Try again."
+      );
       setIsError(true);
     }
   };
 
   return (
     <div className="w-full">
-      <div className="text-center mb-2">
-        <p className="text-gray-600 text-xs">
-          You can reach everything you are looking for
-        </p>
-      </div>
+      {/* <h2 className="text-xl font-bold text-center text-gray-800 mb-1">
+        Create Account
+      </h2> */}
+      <p className="text-center text-gray-600 text-sm mb-4">
+        You can reach everything you are looking for
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* Full Name and Gender on one line */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full p-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
 
+        {/* Full Name */}
+        <div>
+          <label className="text-sm text-gray-700 font-medium">Full Name</label>
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter full name"
+            required
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition"
+          />
+        </div>
+
+        {/* Gender + Age */}
+        <div className="grid grid-cols-2 gap-4">
+
+          {/* Gender */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gender
-            </label>
+            <label className="text-sm text-gray-700 font-medium">Gender</label>
             <select
               name="sex"
+              required
               value={formData.sex}
               onChange={handleChange}
-              required
-              className="w-full p-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+              className="w-full mt-1 p-3 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 transition"
             >
               <option value="">Select Gender</option>
               <option value="male">Male</option>
@@ -86,59 +85,57 @@ const Signup = ({ onToggleMode }) => {
               <option value="other">Other</option>
             </select>
           </div>
-        </div>
 
-        {/* Email field - separate line */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full p-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
-          />
-        </div>
-
-        <div className="grid grid-cols-5 gap-3">
-          <div className="col-span-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full p-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
-            />
-          </div>
-
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Age
-            </label>
+          {/* Age — clean stylish number input (NO ARROWS) */}
+          <div>
+            <label className="text-sm text-gray-700 font-medium">Age</label>
             <input
               type="number"
               name="age"
               placeholder="Age"
+              required
               value={formData.age}
               onChange={handleChange}
-              required
-              className="w-full p-2.5 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400"
+              className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition
+                         [appearance:textfield] 
+                         [&::-webkit-outer-spin-button]:appearance-none 
+                         [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
         </div>
 
+        {/* Email */}
+        <div>
+          <label className="text-sm text-gray-700 font-medium">Email</label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition"
+          />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="text-sm text-gray-700 font-medium">Password</label>
+          <input
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 transition"
+          />
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white font-semibold py-2.5 text-base hover:bg-blue-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition shadow"
         >
           Sign Up
         </button>
@@ -146,25 +143,21 @@ const Signup = ({ onToggleMode }) => {
 
       {/* Message */}
       {message && (
-        <div
-          className={`mt-3 p-2 text-center text-sm ${
+        <p
+          className={`mt-4 text-center p-2 rounded ${
             isError
               ? "bg-red-50 text-red-600 border border-red-200"
-              : "bg-green-50 text-green-600 border border-green-200"
+              : "bg-green-50 text-green-700 border border-green-200"
           }`}
         >
           {message}
-        </div>
+        </p>
       )}
 
-      {/* Toggle to login */}
-      <p className="mt-3 text-center text-sm text-gray-600">
+      {/* Toggle login */}
+      <p className="mt-4 text-center text-sm text-gray-600">
         Existing user?{" "}
-        <button
-          type="button"
-          onClick={onToggleMode}
-          className="text-blue-500 font-semibold hover:underline focus:outline-none"
-        >
+        <button onClick={onToggleMode} className="text-indigo-600 font-medium">
           Log in
         </button>
       </p>

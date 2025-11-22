@@ -1,131 +1,135 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react'; 
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
-
-const API_URL = 'http://localhost:8000/api/journal';
+const API_URL = "http://localhost:8000/api/journal";
 
 const Journal = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [entry, setEntry] = useState('');
-  const [mood, setMood] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  const handleMoodSelect = (selectedMood) => {
-    setMood(selectedMood);
-  };
+  const [entry, setEntry] = useState("");
+  const [mood, setMood] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleMoodSelect = (selectedMood) => setMood(selectedMood);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !token) {
-      setMessage("You must be logged in to submit a journal entry.");
-      return;
-    }
+
     if (!entry.trim() || !mood) {
-        setMessage("Please write an entry and select a mood."); 
-        return;
+      setMessage("Please write an entry and select a mood.");
+      return;
     }
 
     setIsSubmitting(true);
-    setMessage('');
+    setMessage("");
 
     try {
-      const response = await axios.post(
+      await axios.post(
         API_URL,
-        { text: entry, mood, userId: user._id }, 
+        { text: entry, mood, userId: user?._id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
-      
+
       setMessage("Journal entry saved successfully! 🎉");
-      setEntry('');
-      setMood('');
-
-
+      setEntry("");
+      setMood("");
     } catch (error) {
-      console.error("Journal Submission Error:", error); 
-     
-      const errorMessage = error.response?.data?.message || "An error occurred while saving. Please check your server."; // Save karte samay galti hui. Kripya apna server check karen.
-      setMessage(errorMessage);
+      setMessage(
+        error.response?.data?.message ||
+          "An error occurred while saving. Please check your server."
+      );
     } finally {
       setIsSubmitting(false);
-      
-      setTimeout(() => setMessage(''), 5000);
+      setTimeout(() => setMessage(""), 5000);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
-      <div className="relative w-full max-w-2xl bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform transition-all duration-500 ease-in-out">
-        
-       
-        <div className="absolute inset-0 z-0 opacity-10" style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1542435503-9a3d60724831?q=80&w=1974&auto=format&fit=crop")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-[#F3E8FF] via-[#F7F5FF] to-[#E4F0FF] flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl p-10 relative overflow-hidden border border-purple-100 animate-fadeIn">
 
-        <div className="relative z-10 p-8">
-          <h2 className="text-4xl font-extrabold text-center text-teal-400 mb-6 tracking-wide drop-shadow-md">
-            Your Inner Sanctuary
-          </h2>
-          <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto italic">
-            "Your thoughts are your own. Write them down and let them go." ("Aapke vichaar aapke hain. Unhein likho aur jaane do.")
+        {/* Decorative Background Soft Pattern */}
+        <div
+          className="absolute inset-0 bg-no-repeat bg-cover opacity-10"
+          style={{
+            backgroundImage:
+              'url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b")',
+          }}
+        ></div>
+
+        {/* Content */}
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold text-gray-800 mb-3">
+            Write Your Journal ✍️
+          </h1>
+          <p className="text-gray-500 mb-8">
+            Your private space to express your thoughts and reflect on your
+            emotions.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <textarea
-                className="w-full p-4 border-2 border-gray-700 bg-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500 text-gray-200 placeholder-gray-500 transition-all duration-300 ease-in-out shadow-inner resize-none"
-                rows="8"
-                placeholder="What's on your mind today?..." 
-                value={entry}
-                onChange={(e) => setEntry(e.target.value)}
-                required
-                disabled={isSubmitting} 
-              ></textarea>
-            </div>
+            {/* Textarea */}
+            <textarea
+              className="w-full p-5 rounded-2xl border border-gray-300 shadow-sm bg-white text-gray-700 focus:ring-4 focus:ring-purple-200 focus:border-purple-400 transition-all resize-none"
+              rows="7"
+              placeholder="How are you feeling today? Write freely..."
+              value={entry}
+              onChange={(e) => setEntry(e.target.value)}
+              disabled={isSubmitting}
+            ></textarea>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-              <span className="text-gray-300 font-medium text-lg">How are you feeling?</span> 
-              <div className="flex space-x-2">
-                <MoodButton mood="happy" currentMood={mood} onClick={handleMoodSelect} label="😊" disabled={isSubmitting} />
-                <MoodButton mood="calm" currentMood={mood} onClick={handleMoodSelect} label="😌" disabled={isSubmitting} />
-                <MoodButton mood="sad" currentMood={mood} onClick={handleMoodSelect} label="😢" disabled={isSubmitting} />
-                <MoodButton mood="angry" currentMood={mood} onClick={handleMoodSelect} label="😡" disabled={isSubmitting} />
-                <MoodButton mood="anxious" currentMood={mood} onClick={handleMoodSelect} label="😥" disabled={isSubmitting} />
+            {/* Mood Selector */}
+            <div>
+              <p className="font-medium text-gray-700 mb-3 text-lg">
+                Select your mood
+              </p>
+              <div className="flex gap-3">
+                <MoodButton mood="happy" label="😊" currentMood={mood} onClick={handleMoodSelect} />
+                <MoodButton mood="calm" label="😌" currentMood={mood} onClick={handleMoodSelect} />
+                <MoodButton mood="sad" label="😢" currentMood={mood} onClick={handleMoodSelect} />
+                <MoodButton mood="angry" label="😡" currentMood={mood} onClick={handleMoodSelect} />
+                <MoodButton mood="anxious" label="😥" currentMood={mood} onClick={handleMoodSelect} />
               </div>
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
-              className={`w-full py-3 px-6 text-white rounded-xl font-bold text-lg shadow-lg transform transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-purple-500 flex items-center justify-center gap-2 
-                ${isSubmitting || !entry.trim() || !mood
-                  ? 'bg-gray-500 cursor-not-allowed opacity-70' 
-                  : 'bg-purple-600 hover:scale-105 hover:bg-purple-700'
-                }`}
-              disabled={isSubmitting || !entry.trim() || !mood} // Disable if submitting or fields are empty (Submit karte samay ya field khaali hone par disable karen)
+              disabled={isSubmitting || !entry.trim() || !mood}
+              className={`w-full py-3 text-lg font-semibold rounded-xl shadow-md transition-all flex items-center justify-center ${
+                isSubmitting || !entry.trim() || !mood
+                  ? "bg-purple-300 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700 text-white hover:scale-[1.02]"
+              }`}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin w-5 h-5" /> Submitting... 
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Submitting...
                 </>
               ) : (
-                'Save Your Thoughts' 
+                "Save Journal Entry"
               )}
             </button>
           </form>
 
+          {/* Message */}
           {message && (
-            <p className={`mt-6 text-center text-sm font-semibold animate-pulse ${message.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
+            <p
+              className={`mt-5 text-center font-medium ${
+                message.includes("success") ? "text-green-600" : "text-red-600"
+              }`}
+            >
               {message}
             </p>
           )}
@@ -135,35 +139,34 @@ const Journal = () => {
   );
 };
 
-const MoodButton = ({ mood, currentMood, onClick, label, disabled }) => {
-  // Define styles using Tailwind classes for better consistency (Behtar samanjasya ke liye Tailwind classes ka upyog karen)
-  const selectedStyles = {
-    happy: 'bg-yellow-400 ring-yellow-500 text-black shadow-lg shadow-yellow-500/50',
-    calm: 'bg-green-400 ring-green-500 text-black shadow-lg shadow-green-500/50',
-    sad: 'bg-blue-400 ring-blue-500 text-white shadow-lg shadow-blue-500/50',
-    angry: 'bg-red-500 ring-red-500 text-white shadow-lg shadow-red-500/50',
-    anxious: 'bg-orange-400 ring-orange-500 text-black shadow-lg shadow-orange-500/50',
-  };
+export default Journal;
 
-  const defaultStyle = 'bg-gray-700 text-white hover:bg-gray-600';
+/* ---------------- MOOD BUTTON ---------------- */
+const MoodButton = ({ mood, label, currentMood, onClick }) => {
+  const active = currentMood === mood;
+
+  const moodColors = {
+    happy: "bg-yellow-300",
+    calm: "bg-green-300",
+    sad: "bg-blue-300",
+    angry: "bg-red-400",
+    anxious: "bg-orange-300",
+  };
 
   return (
     <button
       type="button"
-      className={`p-4 rounded-full text-2xl transition-all duration-300 ease-in-out transform focus:outline-none focus:ring-4 focus:ring-opacity-70 
-        ${mood === currentMood 
-          ? selectedStyles[mood] + ' scale-125 ring-4' 
-          : defaultStyle + ' hover:scale-110'
-        }
-        ${disabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}
-      `}
       onClick={() => onClick(mood)}
-      aria-label={mood}
-      disabled={disabled}
+      className={`w-14 h-14 flex items-center justify-center text-3xl rounded-full 
+      shadow-md transition-transform duration-200 
+      ${
+        active
+          ? `${moodColors[mood]} scale-125 ring-4 ring-white`
+          : "bg-gray-200 hover:scale-110"
+      }
+      `}
     >
       {label}
     </button>
   );
 };
-
-export default Journal;

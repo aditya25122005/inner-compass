@@ -1,13 +1,17 @@
-import express from 'express';
-import { getTasks, updateTaskStatus } from '../controllers/task.controller.js';
-import { protect } from '../middlewares/auth.middleware.js'; 
+import express from "express";
+import {
+  getTasks,
+  updateTaskStatus,
+  deleteTask,
+  getSeparatedTasks
+} from "../controllers/task.controller.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// Route 1: GET /api/tasks - Fetch all tasks
-router.get('/', protect, getTasks);
-
-// Route 2: PUT /api/tasks/:id - Update task status
-router.put('/:id', protect, updateTaskStatus);
+router.get("/", protect, getTasks);
+router.put("/:id", protect, updateTaskStatus);
+router.delete("/:id", protect, deleteTask);  // ✔ delete route
+router.get("/separate", protect, getSeparatedTasks);
 
 export default router;

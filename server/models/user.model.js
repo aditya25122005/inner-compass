@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   age: { type: Number, required: true },
   sex: { type: String, enum: ["male", "female", "other"], required: true },
+  profileImageUrl: { type: String, default: "" },  
   refreshToken: { type: String },
 }, { timestamps: true });
 

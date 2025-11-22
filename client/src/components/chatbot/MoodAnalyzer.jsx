@@ -143,20 +143,31 @@ const MoodAnalyzer = ({ onBack }) => {
             </form>
 
             {/* Mood Analysis Results */}
-            {moodAnalysis && (
-              <div className="mt-6 p-4 bg-pink-50 border border-pink-200 rounded-lg">
-                <h3 className="font-medium text-pink-800 mb-2">Mood Analysis Results</h3>
-                <div className="text-sm text-pink-700">
-                  <p className="mb-2"><strong>Message:</strong> {moodAnalysis.message}</p>
-                  <div className="bg-white p-3 rounded border">
-                    <p className="whitespace-pre-wrap">{moodAnalysis.analysis}</p>
-                  </div>
-                  <p className="text-xs text-pink-600 mt-2">
-                    Analyzed on {new Date(moodAnalysis.analyzedAt).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            )}
+           {moodAnalysis && (
+  <div className="mt-6 p-4 bg-pink-50 border border-pink-200 rounded-lg">
+    <h3 className="font-medium text-pink-800 mb-2">Mood Analysis Results</h3>
+    <div className="text-sm text-pink-700 space-y-2">
+
+      <p><strong>Emotion:</strong> {moodAnalysis.emotion}</p>
+      <p><strong>Intensity:</strong> {moodAnalysis.intensity}/10</p>
+
+      <p><strong>Advice:</strong></p>
+      <div className="bg-white p-3 rounded border">
+        <p className="whitespace-pre-wrap">{moodAnalysis.advice}</p>
+      </div>
+
+      <p><strong>AI Response:</strong></p>
+      <div className="bg-white p-3 rounded border">
+        <p className="whitespace-pre-wrap">{moodAnalysis.response}</p>
+      </div>
+
+      <p className="text-xs text-pink-600 mt-2">
+        Analyzed just now
+      </p>
+    </div>
+  </div>
+)}
+
           </div>
 
           {/* Journal Prompt Generator */}
