@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Home, Calendar, Frown, Smile, Laugh, Meh, Angry } from 'lucide-react'; 
 
 
-const API_URL = 'http://localhost:5000/api/journal';
+const API_URL = 'https://inner-compass-seven.vercel.app/api/journal';
 
 const Journal = () => {
   const { user, token } = useAuth();

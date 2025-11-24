@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://inner-compass-seven.vercel.app/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,7 +40,7 @@ API.interceptors.response.use(
 
         // Try to refresh the token
         const response = await axios.post(
-          'http://localhost:5000/api/auth/refresh',
+          'https://inner-compass-seven.vercel.app/api/auth/refresh',
           { refreshToken },
           { withCredentials: true }
         );

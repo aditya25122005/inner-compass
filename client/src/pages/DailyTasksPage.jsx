@@ -40,7 +40,7 @@ const DailyTasksPage = () => {
         setRegenerating(true);
         try {
             const token = localStorage.getItem('authToken');
-            const response = await axios.post('http://localhost:5000/api/tasks/regenerate', {}, {
+            const response = await axios.post('https://inner-compass-seven.vercel.app/api/tasks/regenerate', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTasks(response.data.tasks);

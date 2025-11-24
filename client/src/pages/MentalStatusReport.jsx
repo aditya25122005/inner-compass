@@ -28,12 +28,12 @@ const MentalStatusReport = () => {
       const chatResult = await chatbotAPI.getStats();
       
       // Fetch journal entries
-      const journalResponse = await axios.get('http://localhost:5000/api/journal', {
+      const journalResponse = await axios.get('https://inner-compass-seven.vercel.app/api/journal', {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch user profile to get actual mental health score
-      const profileResponse = await axios.get('http://localhost:5000/api/auth/profile', {
+      const profileResponse = await axios.get('https://inner-compass-seven.vercel.app/api/auth/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

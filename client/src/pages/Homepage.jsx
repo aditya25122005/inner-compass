@@ -403,10 +403,10 @@ const Homepage = () => {
               <div>
                 <h4 className="font-bold text-gray-900 mb-4 text-base">Contact Us</h4>
                 <p className="text-sm text-gray-800 mb-4 font-medium">
-                  Email: support@innercompass.com
+                  Email: singhal.himanshu.dev@gmail.com
                 </p>
                 <p className="text-sm text-gray-800 mb-4 font-medium">
-                  Phone: +1 (555) 123-4567
+                  Phone: +91 7906136665
                 </p>
                 <div className="flex space-x-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-md">

@@ -35,7 +35,7 @@ const Dashboard = () => {
 
     const fetchUserProfile = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/auth/profile', {
+            const response = await axios.get('https://inner-compass-seven.vercel.app/api/auth/profile', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProfileData(response.data.data);

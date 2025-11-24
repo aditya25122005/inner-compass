@@ -27,7 +27,7 @@ const ProgressActivity = () => {
     setLoading(true);
     try {
       // Fetch journal entries
-      const journalResponse = await axios.get('http://localhost:5000/api/journal', {
+      const journalResponse = await axios.get('https://inner-compass-seven.vercel.app/api/journal', {
         headers: { Authorization: `Bearer ${token}` }
       });
 

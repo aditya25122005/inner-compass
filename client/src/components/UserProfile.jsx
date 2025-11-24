@@ -24,7 +24,7 @@ const UserProfile = ({ isOpen, onClose, user, onProfileUpdate }) => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:5000/api/auth/profile', {
+      const response = await axios.get('https://inner-compass-seven.vercel.app/api/auth/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfileData(response.data.data);
@@ -82,7 +82,7 @@ const UserProfile = ({ isOpen, onClose, user, onProfileUpdate }) => {
       };
 
       const response = await axios.put(
-        'http://localhost:5000/api/auth/profile',
+        'https://inner-compass-seven.vercel.app/api/auth/profile',
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
