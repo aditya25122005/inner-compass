@@ -6,15 +6,14 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// All chatbot routes require authentication (temporarily disabled for testing)
-// router.use(verifyJWT);
+// All chatbot routes require authentication
+router.use(protect);
 
 // Send a message to the chatbot
 router.post('/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    // Use a default user ID for testing without authentication
-    const userId = req.user?._id || new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
+    const userId = req.user._id;
 
     if (!message || message.trim() === '') {
       return res.status(400).json({
@@ -42,8 +41,9 @@ router.post('/chat', async (req, res) => {
     await userMessage.save();
 
     // Generate bot response using Gemini
-    console.log(` Generating response for ${req.user?.email || 'test user'}...`);
+    console.log(`🤖 Generating response for ${req.user?.email}...`);
     const botResponse = await geminiService.generateResponse(message, context);
+    console.log(`✅ Response generated successfully`);
 
     // Save bot message
     const botMessage = new ChatMessage({
@@ -57,13 +57,13 @@ router.post('/chat', async (req, res) => {
       success: true,
       data: {
         userMessage: {
-          id: userMessage._id,
+          _id: userMessage._id,
           message: userMessage.message,
           sender: userMessage.sender,
           createdAt: userMessage.createdAt
         },
         botMessage: {
-          id: botMessage._id,
+          _id: botMessage._id,
           message: botMessage.message,
           sender: botMessage.sender,
           createdAt: botMessage.createdAt
@@ -72,11 +72,12 @@ router.post('/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in chatbot conversation:', error);
+    console.error('❌ Error in chatbot conversation:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Failed to process chat message',
-      error: error.message
+      message: 'Failed to process chat message. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -84,7 +85,7 @@ router.post('/chat', async (req, res) => {
 // Get conversation history
 router.get('/history', async (req, res) => {
   try {
-    const userId = req.user?._id || new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
+    const userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
@@ -127,7 +128,7 @@ router.get('/history', async (req, res) => {
 // Clear conversation history
 router.delete('/history', async (req, res) => {
   try {
-    const userId = req.user?._id || new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
+    const userId = req.user._id;
     
     const result = await ChatMessage.deleteMany({ userId });
     
@@ -153,7 +154,7 @@ router.delete('/history', async (req, res) => {
 router.post('/analyze-mood', async (req, res) => {
   try {
     const { message } = req.body;
-    const userId = req.user?._id || new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
+    const userId = req.user._id;
 
     if (!message || message.trim() === '') {
       return res.status(400).json({
@@ -244,7 +245,7 @@ router.get('/health', async (req, res) => {
 // Get chatbot statistics for the user
 router.get('/stats', async (req, res) => {
   try {
-    const userId = req.user?._id || new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
+    const userId = req.user._id;
     
     const totalMessages = await ChatMessage.countDocuments({ userId });
     const userMessages = await ChatMessage.countDocuments({ userId, sender: 'user' });

@@ -1,24 +1,23 @@
-// import React from 'react';
 import Journal from './pages/Journal.jsx';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './pages/Homepage.jsx';
-import AuthPage from './pages/AuthPage.jsx';
+import GetStarted from './pages/GetStarted.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import ChatbotPage from './pages/ChatbotPage.jsx';
 import PrivateRoute from './components/PrivateRoute.jsx';
 import Resources from './pages/Resources.jsx';
 import DailyTasksPage from './pages/DailyTasksPage.jsx';
-// import { useAuth } from './context/AuthContext.jsx';
+import MentalStatusReport from './pages/MentalStatusReport.jsx';
+import ProgressActivity from './pages/ProgressActivity.jsx';
 
-function App() {
+// Main App Component
+function App() { 
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/signup" element={<AuthPage />} />
+        <Route path="/get-started" element={<GetStarted />} />
         
-        {/* Protected Dashboard Route */}
         <Route 
           path="/dashboard" 
           element={
@@ -28,12 +27,11 @@ function App() {
           } 
         />
 
-        {/* Chatbot Route - Direct Access */}
         <Route 
           path="/chatbot" 
           element={<ChatbotPage />} 
         />
-        {/* New Protected Journal Route */}
+        
         <Route 
           path="/journal" 
           element={
@@ -43,7 +41,6 @@ function App() {
           } 
         />
 
-        {/* Resources route */}
         <Route 
           path="/resources" 
           element={
@@ -52,7 +49,7 @@ function App() {
             </PrivateRoute>
           } 
         />
-        {/* Daily Tasks page route */}
+        
         <Route 
           path="/tasks" 
           element={
@@ -61,7 +58,25 @@ function App() {
             </PrivateRoute>
           } 
         />
-        {/* A fallback for any unknown URL, redirects to the homepage */}
+        
+        <Route 
+          path="/mental-status-report" 
+          element={
+            <PrivateRoute>
+              <MentalStatusReport />
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
+          path="/progress-activity" 
+          element={
+            <PrivateRoute>
+              <ProgressActivity />
+            </PrivateRoute>
+          } 
+        />
+        
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

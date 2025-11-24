@@ -29,18 +29,20 @@ const ChatMessage = ({ message }) => {
 
         {/* Message Content */}
         <div className={`flex flex-col ${isBot ? 'order-2' : 'order-1'}`}>
-          <div className={`rounded-lg px-4 py-3 shadow-sm ${
+          <div className={`rounded-xl px-5 py-4 shadow-lg ${
             isBot 
-              ? 'bg-white border border-gray-200' 
-              : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+              ? 'bg-white/95 backdrop-blur-sm border-2 border-purple-200' 
+              : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
           }`}>
             {isBot ? (
-              <div className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none" style={{
+                fontFamily: "'Inter', sans-serif"
+              }}>
                 <ReactMarkdown
                   components={{
-                    p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-800 leading-relaxed">{children}</p>,
-                    strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                    em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+                    p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-800 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{children}</p>,
+                    strong: ({ children }) => <strong className="font-semibold text-gray-900" style={{ fontFamily: "'Inter', sans-serif" }}>{children}</strong>,
+                    em: ({ children }) => <em className="italic text-gray-700" style={{ fontFamily: "'Inter', sans-serif" }}>{children}</em>,
                     ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
                     ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
                     li: ({ children }) => <li className="text-gray-800">{children}</li>,
@@ -60,14 +62,18 @@ const ChatMessage = ({ message }) => {
                 </ReactMarkdown>
               </div>
             ) : (
-              <p className="text-white leading-relaxed whitespace-pre-wrap">
+              <p className="text-white leading-relaxed whitespace-pre-wrap font-medium" style={{
+                fontFamily: "'Inter', sans-serif"
+              }}>
                 {message.message}
               </p>
             )}
           </div>
           
           {/* Timestamp */}
-          <div className={`text-xs text-gray-500 mt-1 ${isBot ? 'text-left' : 'text-right'}`}>
+          <div className={`text-xs text-gray-700 mt-1 font-medium ${isBot ? 'text-left' : 'text-right'}`} style={{
+            fontFamily: "'Inter', sans-serif"
+          }}>
             {isBot ? 'InnerCompass AI' : 'You'} • {timestamp}
           </div>
         </div>

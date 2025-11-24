@@ -11,14 +11,14 @@ class ChatbotAPI {
       },
     });
 
-    // Add request interceptor to include auth token (disabled for testing)
+    // Add request interceptor to include auth token
     this.client.interceptors.request.use(
       (config) => {
-        // Temporarily disabled for testing without authentication
-        // const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
+        // Check both 'token' and 'accessToken' for compatibility
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
       },
       (error) => {
@@ -30,11 +30,9 @@ class ChatbotAPI {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
+        // Don't auto-redirect on 401, let components handle auth errors
         if (error.response?.status === 401) {
-          // Handle unauthorized - redirect to login
-          localStorage.removeItem('accessToken');
-          sessionStorage.removeItem('accessToken');
-          window.location.href = '/auth';
+          console.warn('Chatbot API: Unauthorized request');
         }
         return Promise.reject(error);
       }

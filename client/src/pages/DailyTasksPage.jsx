@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { CheckSquare, Clock, Trash2, Zap, Target, XCircle, ArrowLeft, Loader2, Filter } from 'lucide-react';
+import { CheckSquare, Clock, Trash2, Zap, Target, XCircle, ArrowLeft, Loader2, Filter, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { taskAPI } from '../services/api'; 
+import { taskAPI } from '../services/api';
+import axios from 'axios'; 
 
 
 const DailyTasksPage = () => {
@@ -9,6 +10,7 @@ const DailyTasksPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('pending'); // pending, completed, all
+    const [regenerating, setRegenerating] = useState(false);
 
     useEffect(() => {
         fetchTasks();
@@ -18,7 +20,7 @@ const DailyTasksPage = () => {
         setLoading(true);
         setError(null);
         try {
-            // Fetch all tasks from the backend
+            // Fetch all tasks from the backend (auto-generates if needed)
             const data = await taskAPI.getTasks();
             setTasks(data);
         } catch (err) {
@@ -27,6 +29,26 @@ const DailyTasksPage = () => {
             setTasks([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const regenerateTasks = async () => {
+        if (!window.confirm('This will delete all current tasks and generate 4 new personalized tasks. Continue?')) {
+            return;
+        }
+        
+        setRegenerating(true);
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await axios.post('http://localhost:5000/api/tasks/regenerate', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTasks(response.data.tasks);
+        } catch (err) {
+            console.error("Failed to regenerate tasks:", err);
+            alert("Failed to regenerate tasks. Please try again.");
+        } finally {
+            setRegenerating(false);
         }
     };
 
@@ -61,8 +83,39 @@ const DailyTasksPage = () => {
     const getFilterStyle = (currentFilter) => 
         filter === currentFilter ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100';
     
-   
     const getTaskTime = (task) => task.assignedDate ? new Date(task.assignedDate).toLocaleDateString() : 'Today';
+
+    const getTimeRemaining = (expiresAt) => {
+        if (!expiresAt) return 'No expiration';
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        const diff = expiry - now;
+        
+        if (diff < 0) return 'Expired';
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hours > 0) return `${hours}h ${minutes}m left`;
+        return `${minutes}m left`;
+    };
+
+    const getPriorityColor = (priority) => {
+        if (priority === 'high') return 'bg-red-100 text-red-700';
+        if (priority === 'medium') return 'bg-yellow-100 text-yellow-700';
+        return 'bg-green-100 text-green-700';
+    };
+
+    const getCategoryIcon = (category) => {
+        switch(category) {
+            case 'Mindfulness': return '🧘';
+            case 'Activity': return '🏃';
+            case 'Social': return '👥';
+            case 'Sleep': return '😴';
+            case 'Nutrition': return '🥗';
+            default: return '💚';
+        }
+    };
 
     if (error) {
         return <div className="text-center p-12 text-red-600 bg-red-100 max-w-6xl mx-auto mt-10 rounded-lg">{error}</div>;
@@ -75,7 +128,31 @@ const DailyTasksPage = () => {
                     <Link to="/dashboard" className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
                         <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
                     </Link>
-                    <h1 className="text-3xl font-extrabold text-gray-900">Your Daily Task Manager</h1>
+                    <div className="flex items-center space-x-4">
+                        <h1 className="text-3xl font-extrabold text-gray-900">AI-Powered Daily Tasks</h1>
+                        <button
+                            onClick={regenerateTasks}
+                            disabled={regenerating}
+                            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${regenerating ? 'animate-spin' : ''}`} />
+                            <span>{regenerating ? 'Generating...' : 'Regenerate Tasks'}</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* AI Task Info Banner */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-600 p-4 rounded-lg mb-6">
+                    <div className="flex items-start">
+                        <Sparkles className="w-5 h-5 text-purple-600 mt-0.5 mr-3 flex-shrink-0" />
+                        <div>
+                            <h3 className="font-semibold text-purple-900 mb-1">AI-Generated Wellness Tasks</h3>
+                            <p className="text-sm text-purple-800">
+                                These 4 personalized tasks are generated by Gemini AI based on your mental health analysis, 
+                                recent journal entries, and mood patterns. Tasks automatically reset every 24 hours.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Progress Tracker Card */}
@@ -126,35 +203,84 @@ const DailyTasksPage = () => {
                         filteredTasks.map(task => (
                             <div 
                                 key={task._id}
-                                className={`flex items-center p-4 rounded-xl shadow-sm transition-all duration-300 ${task.isCompleted ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200 hover:shadow-lg'}`}
+                                className={`p-5 rounded-xl shadow-md transition-all duration-300 border-2 ${
+                                    task.isCompleted 
+                                        ? 'bg-green-50 border-green-300' 
+                                        : 'bg-white border-gray-200 hover:shadow-xl hover:border-indigo-300'
+                                }`}
                             >
-                                {/* Checkbox/Status */}
-                                <button 
-                                    onClick={() => toggleTaskCompletion(task._id, task.isCompleted)}
-                                    className={`p-2 rounded-full transition-colors mr-4 flex-shrink-0 ${task.isCompleted ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-300 hover:bg-indigo-400'}`}
-                                    aria-label={`Mark task ${task.title} as ${task.isCompleted ? 'incomplete' : 'complete'}`}
-                                >
-                                    <CheckSquare className={`w-6 h-6 text-white ${task.isCompleted ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`} />
-                                </button>
-                                
-                                {/* Task Content */}
-                                <div className="flex-1 min-w-0">
-                                    <p className={`text-lg font-semibold ${task.isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-                                        {task.title}
-                                    </p>
-                                    <div className="flex space-x-3 text-sm mt-1 text-gray-500">
-                                        {/* Display task category (from model) */}
-                                        <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-xs font-medium capitalize">{task.category || 'General'}</span>
-                                        <span className="flex items-center text-xs">
-                                            <Clock className="w-3 h-3 mr-1" /> {getTaskTime(task)}
-                                        </span>
+                                <div className="flex items-start">
+                                    {/* Checkbox/Status */}
+                                    <button 
+                                        onClick={() => toggleTaskCompletion(task._id, task.isCompleted)}
+                                        className={`p-2.5 rounded-full transition-all mr-4 flex-shrink-0 ${
+                                            task.isCompleted 
+                                                ? 'bg-green-500 hover:bg-green-600 shadow-md' 
+                                                : 'bg-gray-200 hover:bg-indigo-500 hover:shadow-lg'
+                                        }`}
+                                        aria-label={`Mark task ${task.title} as ${task.isCompleted ? 'incomplete' : 'complete'}`}
+                                    >
+                                        <CheckSquare className={`w-6 h-6 text-white ${task.isCompleted ? 'opacity-100' : 'opacity-50 hover:opacity-100'}`} />
+                                    </button>
+                                    
+                                    {/* Task Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <h3 className={`text-lg font-bold ${task.isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                                                {getCategoryIcon(task.category)} {task.title}
+                                            </h3>
+                                            {task.priority && (
+                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${getPriorityColor(task.priority)}`}>
+                                                    {task.priority}
+                                                </span>
+                                            )}
+                                        </div>
+                                        
+                                        {task.description && (
+                                            <p className={`text-sm mb-3 ${task.isCompleted ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                💡 {task.description}
+                                            </p>
+                                        )}
+                                        
+                                        <div className="flex flex-wrap gap-2 text-xs">
+                                            {/* Category Badge */}
+                                            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-medium capitalize">
+                                                {task.category || 'Wellness'}
+                                            </span>
+                                            
+                                            {/* Auto-generated Badge */}
+                                            {task.isAutoGenerated && (
+                                                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium flex items-center">
+                                                    <Sparkles className="w-3 h-3 mr-1" /> AI Generated
+                                                </span>
+                                            )}
+                                            
+                                            {/* Time Remaining */}
+                                            {task.expiresAt && (
+                                                <span className={`px-3 py-1 rounded-full font-medium flex items-center ${
+                                                    new Date(task.expiresAt) < new Date() 
+                                                        ? 'bg-red-100 text-red-700' 
+                                                        : 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                    <Clock className="w-3 h-3 mr-1" /> {getTimeRemaining(task.expiresAt)}
+                                                </span>
+                                            )}
+                                            
+                                            {/* Assigned Date */}
+                                            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
+                                                📅 {getTaskTime(task)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                {/* Delete Button (Implementation can be added later) */}
-                                <button className="p-2 ml-4 text-red-400 hover:text-red-600 transition-colors flex-shrink-0">
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                                {task.isCompleted && (
+                                    <div className="mt-3 pt-3 border-t border-green-200">
+                                        <p className="text-sm text-green-700 font-medium flex items-center">
+                                            ✅ Completed! +2 points to your mental health score
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}

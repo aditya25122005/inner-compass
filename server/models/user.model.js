@@ -2,13 +2,20 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
   name: { type: String, required: true },
   age: { type: Number, required: true },
-  sex: { type: String, enum: ["male", "female", "other"], required: true },
+  sex: { type: String, required: true },
+  phoneNumber: { type: String },
+  countryCode: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
+  isPhoneVerified: { type: Boolean, default: false },
+  isEmailVerified: { type: Boolean, default: false },
   refreshToken: { type: String },
+  profilePicture: { type: String, default: '' }, // Store base64 or URL
+  mentalHealthScore: { type: Number, default: 50 }, // Initial score
+  lastScoreUpdate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 userSchema.methods.generateAccessToken = function () {
@@ -16,7 +23,6 @@ userSchema.methods.generateAccessToken = function () {
     {
       _id: this.id,
       email: this.email,
-      username: this.username,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {

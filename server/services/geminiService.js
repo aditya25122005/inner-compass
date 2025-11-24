@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import fallbackChatbot from './fallbackChatbot.js';
 
 // Ensure dotenv is loaded
 dotenv.config();
@@ -13,9 +14,36 @@ class GeminiService {
     }
     
     this.genAI = new GoogleGenerativeAI(this.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Try different models - some API keys have different model access
+    this.modelNames = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro'];
+    this.currentModelIndex = 0;
+    this.initializeModel();
     
-    console.log(' Gemini AI service initialized successfully');
+    console.log('✅ Gemini AI service initialized successfully');
+  }
+
+  initializeModel() {
+    const modelName = this.modelNames[this.currentModelIndex];
+    this.model = this.genAI.getGenerativeModel({ 
+      model: modelName,
+      generationConfig: {
+        temperature: 0.9,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      }
+    });
+    this.currentModelName = modelName;
+    console.log(`💡 Using model: ${modelName}`);
+  }
+
+  async tryNextModel() {
+    if (this.currentModelIndex < this.modelNames.length - 1) {
+      this.currentModelIndex++;
+      this.initializeModel();
+      return true;
+    }
+    return false;
   }
 
   async generateResponse(userMessage, context = [], systemPrompt = null) {
@@ -30,15 +58,23 @@ class GeminiService {
       }
 
       // Default system prompt for InnerCompass mood chatbot
-      const defaultSystemPrompt = `You are InnerCompass, a compassionate and supportive AI companion designed to help users with their emotional well-being and mental health journey. You provide:
+      const defaultSystemPrompt = `You are InnerCompass, a friendly and supportive AI companion - like a caring friend who's always there to listen. Talk naturally and casually, like you're chatting with a friend over coffee. Use emojis when appropriate 😊
 
-1. Empathetic listening and emotional support
-2. Practical coping strategies and mindfulness techniques
-3. Mood tracking insights and reflection prompts
-4. Gentle guidance for self-care and personal growth
-5. Crisis support awareness (always recommend professional help for serious issues)
+Your vibe:
+- Warm, casual, and relatable (use "I feel you", "that sucks", "ugh", etc.)
+- Empathetic but not overly formal or clinical
+- Encouraging and supportive without being preachy
+- Real talk - acknowledge when things are hard
+- Use emojis to show emotion and connection 💜
 
-Keep responses warm, understanding, and conversational. Focus on the user's emotional needs while being supportive but not providing medical advice.`;
+What you do:
+- Listen and validate feelings without judgment
+- Share practical coping strategies in a friendly way
+- Ask open-ended questions to understand better
+- For serious issues, gently suggest professional help
+- Keep it conversational - like texting a supportive friend
+
+Keep responses natural and concise (2-4 sentences usually, longer when needed). Be authentic, warm, and human. Avoid clinical language - talk like a real friend would!`;
 
       const prompt = systemPrompt || defaultSystemPrompt;
       
@@ -47,29 +83,69 @@ Keep responses warm, understanding, and conversational. Focus on the user's emot
         ? `${prompt}\n\nPrevious conversation:\n${conversationContext}\n\nUser: ${userMessage}\n\nAssistant:`
         : `${prompt}\n\nUser: ${userMessage}\n\nAssistant:`;
 
-      const result = await this.model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
+      console.log(`📤 Sending request to Gemini API (${this.currentModelName})...`);
+      
+      // Try with retry logic for rate limits and model fallback
+      let lastError;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const result = await this.model.generateContent(fullPrompt);
+          const response = await result.response;
+          const text = response.text();
 
-      if (!text) {
-        throw new Error('Empty response from Gemini API');
+          if (!text || text.trim() === '') {
+            console.error('❌ Empty response from Gemini API');
+            throw new Error('Empty response from Gemini API');
+          }
+
+          console.log(`✅ Received response from Gemini API (attempt ${attempt})`);
+          return text.trim();
+        } catch (err) {
+          lastError = err;
+          
+          // Check if it's a rate limit error (429)
+          if (err.status === 429 && attempt <= 2) {
+            const waitTime = attempt * 3000; // 3s, 6s
+            console.log(`⏳ Rate limit hit, waiting ${waitTime/1000}s before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+          
+          // Check if it's a model not found error (404)
+          if (err.status === 404 && attempt === 1) {
+            console.log(`⚠️  Model ${this.currentModelName} not available, trying alternative...`);
+            if (await this.tryNextModel()) {
+              continue; // Try again with new model
+            }
+          }
+          
+          // For other errors or final retry, break the loop
+          break;
+        }
       }
-
-      return text.trim();
+      
+      // If we got here, all retries failed
+      throw lastError;
 
     } catch (error) {
-      console.error('Gemini API Error:', error.message);
+      console.error('❌ Gemini API Error:', error.message);
       
-      // Fallback responses when API fails
-      const fallbackResponses = [
-        "I'm having trouble connecting to my AI service right now, but I'm here to listen. Can you tell me more about how you're feeling?",
-        "Sorry, I'm experiencing some technical difficulties. How are you feeling today? I'd love to support you.",
-        "I'm not able to process that properly right now, but I care about your well-being. What's on your mind?",
-        "There seems to be a connection issue on my end. Is there something specific you'd like to talk about regarding your mood or feelings?",
-        "I'm having some technical troubles, but I'm still here for you. How can I support your emotional well-being today?"
-      ];
+      // Check if it's a rate limit error
+      if (error.status === 429) {
+        console.error('⚠️  Rate limit exceeded. The API quota has been exhausted.');
+        console.error('💡 Solutions:');
+        console.error('   1. Wait 20-60 seconds and try again');
+        console.error('   2. Upgrade your API plan at https://ai.google.dev/pricing');
+        console.error('   3. Use a different API key');
+      } else if (error.status === 404) {
+        console.error('⚠️  Model not found. This API key may not support the requested model.');
+      } else {
+        console.error('Error details:', error);
+      }
       
-      return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+      // Use intelligent fallback chatbot system
+      console.log('💡 Using fallback chatbot for response');
+      return fallbackChatbot.generateResponse(userMessage, context);
     }
   }
 

@@ -38,51 +38,67 @@ const ProgressCard = () => {
 
     if (loading) {
          return (
-            <div className="flex items-center justify-center h-full bg-white rounded-xl shadow-lg border border-gray-200">
+            <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
             </div>
         );
     }
     
     return (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 h-full flex flex-col">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">Progress & Activity</h3>
+        <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-800">Progress & Activity</h3>
+                <span className="text-purple-600 text-sm font-medium hover:text-purple-700 transition-colors cursor-pointer">Details →</span>
+            </div>
             
             {/* Task Compliance Rate */}
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-lg font-semibold text-gray-700 flex items-center">
-                        <Zap className="w-4 h-4 mr-2 text-indigo-500" /> Task Compliance
+            <div className="mb-6 p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl">
+                <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-base font-semibold text-gray-700 flex items-center">
+                        <Zap className="w-5 h-5 mr-2 text-purple-600" /> Task Compliance
                     </h4>
-                    <span className="text-2xl font-bold text-indigo-600">{complianceRate}%</span>
+                    <span className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{complianceRate}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div 
-                        className="bg-indigo-600 h-2.5 rounded-full transition-all duration-700" 
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 h-3 rounded-full transition-all duration-700 shadow-md" 
                         style={{ width: `${complianceRate}%` }}
                     ></div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Rate of completion for assigned tasks.</p>
+                <p className="text-xs text-gray-600 mt-2">Completion rate for wellness tasks</p>
             </div>
 
             {/* Weekly Activity Chart (Sentiment Trend Visualization) */}
-            <h4 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-                <Activity className="w-4 h-4 mr-2 text-green-500" /> Weekly Sentiment Trend
-            </h4>
-            <div className="flex-1 w-full h-48 min-h-[192px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={weeklyActivityData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                        <XAxis dataKey="week" stroke="#6B7280" style={{ fontSize: '10px' }} />
-                        <YAxis stroke="#6B7280" domain={[0, 100]} style={{ fontSize: '10px' }} />
-                        <Tooltip 
-                            contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px' }} 
-                            itemStyle={{ color: '#ffffff' }}
-                            formatter={(value) => [`Score: ${value}`, 'Week']}
-                        />
-                        <Bar dataKey="score" fill="#4F46E5" radius={[5, 5, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+            <div className="flex-1 flex flex-col">
+                <h4 className="text-base font-semibold text-gray-700 mb-3 flex items-center">
+                    <Activity className="w-5 h-5 mr-2 text-green-500" /> Weekly Wellness Trend
+                </h4>
+                <div className="flex-1 w-full min-h-[180px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={weeklyActivityData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                            <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#9333EA" stopOpacity={0.9}/>
+                                    <stop offset="100%" stopColor="#4F46E5" stopOpacity={0.6}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                            <XAxis dataKey="week" stroke="#6B7280" style={{ fontSize: '12px' }} />
+                            <YAxis stroke="#6B7280" domain={[0, 100]} style={{ fontSize: '11px' }} />
+                            <Tooltip 
+                                contentStyle={{ 
+                                    backgroundColor: '#ffffff', 
+                                    border: '1px solid #E5E7EB', 
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                }} 
+                                itemStyle={{ color: '#374151', fontWeight: '600' }}
+                                formatter={(value) => [`${value} pts`, 'Score']}
+                            />
+                            <Bar dataKey="score" fill="url(#barGradient)" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </div>
     );
